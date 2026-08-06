@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HelioScan — Estimador Solar Fotovoltaico CFE</title>
+    <meta name="description" content="Calcula la viabilidad de paneles solares en tu propiedad con datos de la NASA y tarifas de CFE." />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☀️</text></svg>" />
+    <link rel="manifest" href="/manifest.json" />
+  </head>
+  <body>
+    <!-- Encabezado Principal -->
+    <header class="app-header">
+      <div class="logo-contenedor">
+        <span class="logo-icono">☀️</span>
+        <span class="logo-texto">HELIOSCAN</span>
+      </div>
+      <div class="badge-estado-servicios">
+        <span class="punto-indicador"></span>
+        <span>Sistema de cálculo activo</span>
+      </div>
+    </header>
+
+    <!-- Contenedor Principal de App -->
+    <main class="app-contenedor">
+      <!-- Columna Izquierda: Mapa Interactivo y Detector Satelital -->
+      <section class="columna-principal">
+        <div class="tarjeta-panel">
+          <h2 class="titulo-panel">
+            <span>🗺️ Ubicación y mapa de techos</span>
+          </h2>
+          <p class="subtitulo-panel">
+            Busca la dirección de tu casa, selecciona tu ciudad o haz clic en el mapa.
+          </p>
+
+          <!-- Barra de Búsqueda por Dirección (Geocoding) -->
+          <div class="grupo-formulario" style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+            <input id="input-busqueda-direccion" type="text" class="entrada-texto" placeholder="🔍 Escribe tu dirección (ej: Av. Reforma 100, CDMX o Código Postal)" style="flex: 1;" />
+            <button id="btn-buscar-direccion" class="boton-principal" style="width: auto; white-space: nowrap; padding: 0.65rem 1rem;">
+              Buscar
+            </button>
+          </div>
+
+          <!-- Dropdown Ciudades Predeterminadas -->
+          <div class="grupo-formulario" style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+            <select id="select-ciudad" class="entrada-select" style="flex: 1;">
+              <option value="17.9583,-102.1964" selected>📍 Lázaro Cárdenas, Michoacán (Predeterminada)</option>
+              <option value="29.07296,-110.9559">📍 Hermosillo, Sonora</option>
+              <option value="19.4326,-99.1332">📍 Ciudad de México (CDMX)</option>
+              <option value="25.6866,-100.3161">📍 Monterrey, Nuevo León</option>
+              <option value="20.6597,-103.3496">📍 Guadalajara, Jalisco</option>
+              <option value="32.5149,-117.0382">📍 Tijuana, Baja California</option>
+              <option value="21.1619,-86.8515">📍 Cancún, Quintana Roo</option>
+            </select>
+            <button id="btn-consultar-nasa" class="boton-secundario" style="width: auto; white-space: nowrap;">
+              🌐 Datos NASA
+            </button>
+          </div>
+
+          <!-- Contenedor Mapa Leaflet -->
+          <div class="contenedor-mapa">
+            <div id="mapa-satelital"></div>
+          </div>
+
+          <!-- Coordenadas e Irradiancia Solar -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.85rem; font-size: 0.88rem; color: var(--texto-secundario);">
+            <span>Latitud: <strong id="val-lat">17.9583</strong> | Longitud: <strong id="val-lng">-102.1964</strong></span>
+            <span style="color: var(--color-crema);">☀️ Radiación solar: <strong id="val-irradiancia">Cargando...</strong></span>
+          </div>
+
+          <!-- Sección de Detección de Paneles en Techo -->
+          <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--borde-sutil);">
+            <h3 class="titulo-panel" style="font-size: 1.1rem;">
+              <span>🔍 Detección de paneles solares</span>
+            </h3>
+            <p class="subtitulo-panel">
+              Escanea la imagen satelital para verificar si el techo ya cuenta con paneles instalados.
+            </p>
+
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button id="btn-detectar-ia" class="boton-principal" style="font-size: 0.9rem; padding: 0.65rem 0.9rem; flex: 1 1 200px;">
+                🔍 Escanear paneles en la foto
+              </button>
+              <button id="btn-cargar-demo-paneles" class="boton-secundario" style="font-size: 0.88rem; padding: 0.65rem 0.9rem; flex: 1 1 180px;">
+                🏠 Cargar Techo con Paneles
+              </button>
+              <label class="boton-secundario" style="display: inline-flex; align-items: center; justify-content: center; cursor: pointer; text-align: center; font-size: 0.88rem; padding: 0.65rem 0.9rem; flex: 1 1 150px;">
+                📁 Subir foto propia
+                <input id="input-imagen-archivo" type="file" accept="image/*" style="display: none;" />
+              </label>
+            </div>
+
+            <!-- Canvas de Detecciones Overlay -->
+            <div class="contenedor-canvas-vision">
+              <canvas id="lienzo-vision"></canvas>
+            </div>
+
+            <div id="resumen-deteccion-ia" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--texto-secundario);"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Columna Derecha: Formulario & Dashboard CFE -->
+      <section class="columna-secundaria">
+        <!-- Tarjeta Parámetros del Recibo CFE -->
+        <div class="tarjeta-panel" style="margin-bottom: 1.5rem;">
+          <h2 class="titulo-panel">
+            <span>📋 Datos de tu recibo CFE</span>
+          </h2>
+          <p class="subtitulo-panel">
+            Ingresa tu consumo promedio para proyectar tu ahorro real mes a mes.
+          </p>
+
+          <form id="form-calculadora-solar" onsubmit="event.preventDefault();">
+            <div class="grupo-formulario">
+              <label class="etiqueta-formulario" for="input-consumo">Consumo mensual aproximado (kWh)</label>
+              <input id="input-consumo" type="number" class="entrada-texto" value="480" step="1" min="10" max="10000" />
+            </div>
+
+            <div class="grupo-formulario">
+              <label class="etiqueta-formulario" for="select-tarifa">Tipo de tarifa CFE</label>
+              <select id="select-tarifa" class="entrada-select">
+                <option value="tarifa_01">Tarifa 01 (Casa o departamento)</option>
+                <option value="pdbt">Tarifa PDBT (Negocio o pequeño comercio)</option>
+              </select>
+            </div>
+
+            <div class="grupo-formulario">
+              <label class="etiqueta-formulario" for="select-orientacion">Orientación del techo</label>
+              <select id="select-orientacion" class="entrada-select">
+                <option value="1.0" selected>🧭 Sur (100% Óptima producción solar)</option>
+                <option value="0.88">🧭 Este / Oeste (88% Producción eficiente)</option>
+                <option value="0.72">🧭 Norte (72% Producción con ligera sombra)</option>
+              </select>
+            </div>
+
+            <div class="grupo-formulario">
+              <label class="etiqueta-formulario" for="input-costo-sistema">Presupuesto estimado del equipo (MXN)</label>
+              <input id="input-costo-sistema" type="number" class="entrada-texto" value="145000" step="1000" />
+            </div>
+
+            <button id="btn-calcular-completo" type="submit" class="boton-principal">
+              <span>⚡ Calcular mi ahorro</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Tarjeta Resultante / Dashboard -->
+        <div class="tarjeta-panel">
+          <div id="contenedor-dashboard">
+            <div style="text-align: center; padding: 2rem 1rem; color: var(--texto-secundario);">
+              <p>Presiona <strong>"Calcular mi ahorro"</strong> para ver la comparativa antes y después.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal de Cotización con Instaladores -->
+    <div id="modal-cotizador" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 1rem;">
+      <div style="background: var(--fondo-tarjeta, #262121); border: 1px solid var(--color-crema, #E4D5B7); border-radius: 12px; max-width: 500px; width: 100%; padding: 1.5rem; color: var(--texto-principal, #F7F5F0);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="margin: 0; font-size: 1.2rem; color: var(--color-crema, #E4D5B7);">📞 Solicitar Cotizaciones de Instalación</h3>
+          <button id="btn-cerrar-modal" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--texto-secundario, #B0A8A0); margin-bottom: 1rem;">
+          Envía tu prospección fotovoltaica a instaladores certificados CFE en tu zona.
+        </p>
+        <form id="form-lead-cotizacion" onsubmit="event.preventDefault();">
+          <div class="grupo-formulario" style="margin-bottom: 0.85rem;">
+            <label class="etiqueta-formulario">Nombre Completo</label>
+            <input id="input-lead-nombre" type="text" class="entrada-texto" placeholder="Ej. Carlos Mendoza" required />
+          </div>
+          <div class="grupo-formulario" style="margin-bottom: 0.85rem;">
+            <label class="etiqueta-formulario">Teléfono WhatsApp</label>
+            <input id="input-lead-telefono" type="tel" class="entrada-texto" placeholder="Ej. 8112345678" required />
+          </div>
+          <div class="grupo-formulario" style="margin-bottom: 1rem;">
+            <label class="etiqueta-formulario">Correo Electrónico</label>
+            <input id="input-lead-email" type="email" class="entrada-texto" placeholder="ejemplo@correo.com" required />
+          </div>
+          <button id="btn-enviar-lead" type="submit" class="boton-principal" style="width: 100%;">
+            ✉️ Solicitar 3 Cotizaciones Gratis
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+

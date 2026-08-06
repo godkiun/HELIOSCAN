@@ -1,0 +1,68 @@
+# ==============================================================================
+# ☀️ HELIOSCAN - .gitignore (Node.js, Python, Rust/Wasm, Vite, VS Code)
+# ==============================================================================
+
+# Node.js & Frontend
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+.npm/
+.pnpm-store/
+package-lock.json.bak
+
+# Python & FastAPI
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+.pytest_cache/
+**/.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Rust & WebAssembly (Wasm)
+target/
+**/target/
+**/pkg/
+cargo-timing.html
+
+# PyTorch / YOLOv8 Logs & Runs
+runs/
+entrenamiento_helioscan/
+helioscan_models/
+*.onnx
+*.engine
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDEs & System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+
+# Temporary Archives & Media
+*.zip
+*.mp3
+*.skill
+*.log
+
