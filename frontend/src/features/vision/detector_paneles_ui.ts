@@ -5,6 +5,7 @@ export class ComponenteDetectorPaneles {
   private contexto2D!: CanvasRenderingContext2D;
   private imagenActual: HTMLImageElement | null = null;
   private deteccionesActuales: DeteccionPanelesRespuesta | null = null;
+  private modoEsquematicoHUD: boolean = true;
 
   public inicializar(idCanvas: string): void {
     const elemento = document.getElementById(idCanvas);
@@ -17,6 +18,16 @@ export class ComponenteDetectorPaneles {
       throw new Error("No se pudo obtener el contexto 2D del canvas");
     }
     this.contexto2D = ctx;
+  }
+
+  public alternarModoHUD(): boolean {
+    this.modoEsquematicoHUD = !this.modoEsquematicoHUD;
+    this.redibujarLienzo();
+    return this.modoEsquematicoHUD;
+  }
+
+  public obtenerModoHUD(): boolean {
+    return this.modoEsquematicoHUD;
   }
 
   public async cargarImagenDesdeUrl(urlImagen: string): Promise<void> {
@@ -71,10 +82,8 @@ export class ComponenteDetectorPaneles {
   }
 
   private redibujarLienzo(): void {
-    if (!this.imagenActual) return;
-
     const anchoContenedor = this.lienzoCanvas.parentElement?.clientWidth || 640;
-    const relacionAspecto = this.imagenActual.height / this.imagenActual.width;
+    const relacionAspecto = this.imagenActual ? (this.imagenActual.height / this.imagenActual.width) : 0.75;
     
     this.lienzoCanvas.width = anchoContenedor;
     this.lienzoCanvas.height = Math.round(anchoContenedor * relacionAspecto);
@@ -82,47 +91,113 @@ export class ComponenteDetectorPaneles {
     const ancho = this.lienzoCanvas.width;
     const alto = this.lienzoCanvas.height;
 
-    // Dibujar imagen satelital base
     this.contexto2D.clearRect(0, 0, ancho, alto);
-    this.contexto2D.drawImage(this.imagenActual, 0, 0, ancho, alto);
 
-    if (!this.deteccionesActuales || !this.deteccionesActuales.cajasDelimitadoras) {
+    if (!this.modoEsquematicoHUD && this.imagenActual) {
+      // MODO FOTO SATELITAL: Dibujar imagen satelital real de fondo
+      this.contexto2D.drawImage(this.imagenActual, 0, 0, ancho, alto);
+    } else {
+      // MODO PLANO ESQUEMÁTICO HUD: Fondo carbón con retícula de ingeniería
+      this.contexto2D.fillStyle = "#090d16";
+      this.contexto2D.fillRect(0, 0, ancho, alto);
+
+      // Dibujar retícula técnica de ingeniería (Grid lines)
+      this.contexto2D.strokeStyle = "rgba(30, 41, 59, 0.6)";
+      this.contexto2D.lineWidth = 1;
+      const pasoGrid = 30;
+
+      for (let x = 0; x < ancho; x += pasoGrid) {
+        this.contexto2D.beginPath();
+        this.contexto2D.moveTo(x, 0);
+        this.contexto2D.lineTo(x, alto);
+        this.contexto2D.stroke();
+      }
+      for (let y = 0; y < alto; y += pasoGrid) {
+        this.contexto2D.beginPath();
+        this.contexto2D.moveTo(0, y);
+        this.contexto2D.lineTo(ancho, y);
+        this.contexto2D.stroke();
+      }
+
+      // Etiqueta de encabezado del plano HUD
+      this.contexto2D.fillStyle = "rgba(51, 65, 85, 0.8)";
+      this.contexto2D.font = "bold 11px Outfit, monospace";
+      this.contexto2D.fillText("📐 PLANO ESQUEMÁTICO DE DISPOSICIÓN SOLAR (MODO HUD)", 15, 22);
+    }
+
+    if (!this.deteccionesActuales || !this.deteccionesActuales.cajasDelimitadoras || this.deteccionesActuales.cajasDelimitadoras.length === 0) {
+      if (this.modoEsquematicoHUD) {
+        this.contexto2D.fillStyle = "#64748b";
+        this.contexto2D.font = "14px Outfit, sans-serif";
+        this.contexto2D.textAlign = "center";
+        this.contexto2D.fillText("Presiona 'Escanear paneles' para desplegar la geometría de módulos", ancho / 2, alto / 2);
+        this.contexto2D.textAlign = "start";
+      }
       return;
     }
 
-    // Dibujar cajas de paneles solares detectados por YOLOv8
+    // Dibujar cuadros vectoriales de paneles fotovoltaicos
     this.deteccionesActuales.cajasDelimitadoras.forEach((caja, indice) => {
       const x1 = caja.xMin * ancho;
       const y1 = caja.yMin * alto;
       const anchoCaja = (caja.xMax - caja.xMin) * ancho;
       const altoCaja = (caja.yMax - caja.yMin) * alto;
 
-      // Resplandor de marco solar
-      this.contexto2D.shadowColor = "rgba(245, 158, 11, 0.8)";
-      this.contexto2D.shadowBlur = 10;
-      this.contexto2D.strokeStyle = "#f59e0b"; // Ámbar dorado solar
-      this.contexto2D.lineWidth = 3;
-      this.contexto2D.strokeRect(x1, y1, anchoCaja, altoCaja);
+      if (this.modoEsquematicoHUD) {
+        // Relleno de celda azul marino con resplandor neón dorado
+        this.contexto2D.fillStyle = "rgba(15, 23, 42, 0.85)";
+        this.contexto2D.fillRect(x1, y1, anchoCaja, altoCaja);
 
-      // Relleno semi-transparente
-      this.contexto2D.fillStyle = "rgba(245, 158, 11, 0.15)";
-      this.contexto2D.fillRect(x1, y1, anchoCaja, altoCaja);
+        this.contexto2D.shadowColor = "rgba(245, 158, 11, 0.9)";
+        this.contexto2D.shadowBlur = 12;
+        this.contexto2D.strokeStyle = "#f59e0b"; // Ámbar dorado solar
+        this.contexto2D.lineWidth = 2.5;
+        this.contexto2D.strokeRect(x1, y1, anchoCaja, altoCaja);
+        this.contexto2D.shadowBlur = 0;
 
-      // Restablecer sombra para texto
-      this.contexto2D.shadowBlur = 0;
+        // Dibujar celdas fotovoltaicas (Busbars internas)
+        this.contexto2D.strokeStyle = "rgba(56, 189, 248, 0.35)";
+        this.contexto2D.lineWidth = 1;
+        const celdasX = 3;
+        const celdasY = 2;
+        const wSub = anchoCaja / celdasX;
+        const hSub = altoCaja / celdasY;
 
-      // Etiqueta de confianza
-      const texto = `Panel #${indice + 1} (${Math.round(caja.confianza * 100)}%)`;
-      this.contexto2D.font = "bold 12px Outfit, Inter, sans-serif";
+        for (let cx = 1; cx < celdasX; cx++) {
+          this.contexto2D.beginPath();
+          this.contexto2D.moveTo(x1 + cx * wSub, y1);
+          this.contexto2D.lineTo(x1 + cx * wSub, y1 + altoCaja);
+          this.contexto2D.stroke();
+        }
+        for (let cy = 1; cy < celdasY; cy++) {
+          this.contexto2D.beginPath();
+          this.contexto2D.moveTo(x1, y1 + cy * hSub);
+          this.contexto2D.lineTo(x1 + anchoCaja, y1 + cy * hSub);
+          this.contexto2D.stroke();
+        }
+      } else {
+        // Modo Foto Satelital tradicional
+        this.contexto2D.shadowColor = "rgba(245, 158, 11, 0.8)";
+        this.contexto2D.shadowBlur = 10;
+        this.contexto2D.strokeStyle = "#f59e0b";
+        this.contexto2D.lineWidth = 3;
+        this.contexto2D.strokeRect(x1, y1, anchoCaja, altoCaja);
+
+        this.contexto2D.fillStyle = "rgba(245, 158, 11, 0.15)";
+        this.contexto2D.fillRect(x1, y1, anchoCaja, altoCaja);
+        this.contexto2D.shadowBlur = 0;
+      }
+
+      // Etiqueta de confianza en esquina del módulo
+      const texto = `#${indice + 1} (${Math.round(caja.confianza * 100)}%)`;
+      this.contexto2D.font = "bold 11px Outfit, Inter, sans-serif";
       const anchoTexto = this.contexto2D.measureText(texto).width;
 
-      // Fondo de etiqueta
       this.contexto2D.fillStyle = "#0f172a";
-      this.contexto2D.fillRect(x1, Math.max(0, y1 - 22), anchoTexto + 12, 20);
+      this.contexto2D.fillRect(x1, Math.max(0, y1 - 20), anchoTexto + 10, 18);
 
-      // Texto de etiqueta
       this.contexto2D.fillStyle = "#fbbf24";
-      this.contexto2D.fillText(texto, x1 + 6, Math.max(14, y1 - 8));
+      this.contexto2D.fillText(texto, x1 + 5, Math.max(13, y1 - 7));
     });
   }
 
