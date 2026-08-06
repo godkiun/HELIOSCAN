@@ -58,11 +58,13 @@ body {
   background-attachment: fixed;
 }
 
-/* Encabezado Principal */
+/* Encabezado Principal Centrado */
 .app-header {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
+  text-align: center;
   padding: 1.25rem 2rem;
   background: rgba(17, 24, 39, 0.96);
   backdrop-filter: blur(16px);
@@ -76,11 +78,12 @@ body {
 .logo-contenedor {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.75rem;
 }
 
 .logo-icono {
-  font-size: 2rem;
+  font-size: 2.2rem;
   background: linear-gradient(135deg, #FC8B26, #F79D42);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -89,7 +92,7 @@ body {
 
 .logo-texto {
   font-family: var(--fuente-titulos);
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   font-weight: 800;
   letter-spacing: -0.5px;
   background: linear-gradient(135deg, #FC8B26 20%, #F79D42 50%, #41D0FB 100%);
@@ -97,33 +100,12 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-.badge-estado-servicios {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: rgba(82, 154, 252, 0.15);
-  border: 1px solid #529AFC;
-  padding: 0.4rem 0.9rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
+.logo-descripcion {
+  font-size: 0.88rem;
   color: #41D0FB;
-  font-weight: 700;
-  box-shadow: 0 0 15px rgba(82, 154, 252, 0.3);
-}
-
-.punto-indicador {
-  width: 9px;
-  height: 9px;
-  background-color: #41D0FB;
-  border-radius: 50%;
-  box-shadow: 0 0 12px #4AACFF;
-  animation: pulso 2s infinite;
-}
-
-@keyframes pulso {
-  0% { transform: scale(0.95); opacity: 0.8; }
-  50% { transform: scale(1.3); opacity: 1; }
-  100% { transform: scale(0.95); opacity: 0.8; }
+  margin-top: 0.25rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
 }
 
 /* Layout Principal de la App */
