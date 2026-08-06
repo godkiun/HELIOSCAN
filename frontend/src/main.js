@@ -214,14 +214,6 @@ export class AplicacionHelioScan {
                 await this.alCambiarUbicacion(ubicacion.lat, ubicacion.lng);
             });
         }
-        // Botón para alternar vista Plano Esquemático HUD vs Foto Satelital
-        const btnToggleHUD = document.getElementById("btn-toggle-modo-hud");
-        if (btnToggleHUD) {
-            btnToggleHUD.addEventListener("click", () => {
-                const esHUD = this.detectorPaneles.alternarModoHUD();
-                btnToggleHUD.textContent = esHUD ? "📐 Modo: Plano HUD" : "📷 Modo: Foto Satelital";
-            });
-        }
         // Botón para cargar Techo Demo con Paneles
         const btnDemoPaneles = document.getElementById("btn-cargar-demo-paneles");
         if (btnDemoPaneles) {
