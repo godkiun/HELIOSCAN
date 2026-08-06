@@ -47,6 +47,21 @@ export class AplicacionHelioScan {
     // 2. Inicializar componentes UI
     this.detectorPaneles = new ComponenteDetectorPaneles();
     this.detectorPaneles.inicializar("lienzo-vision");
+    this.detectorPaneles.alCambiarPaneles = (totalPaneles) => {
+      if (!this.deteccionActual) {
+        this.deteccionActual = {
+          exito: true,
+          totalPanelesDetectados: totalPaneles,
+          confianzaPromedio: 1.0,
+          cajasDelimitadoras: [],
+          mensaje: "Edición manual",
+          tiempoProcesamientoMs: 0
+        };
+      } else {
+        this.deteccionActual.totalPanelesDetectados = totalPaneles;
+      }
+      this.ejecutarSimulacionCompleta();
+    };
 
     this.tableroResultados = new TableroResultados();
     this.tableroResultados.inicializar("contenedor-dashboard");
@@ -336,6 +351,78 @@ export class AplicacionHelioScan {
             this.ejecutarSimulacionCompleta();
           }
         }
+      });
+    }
+
+    // Botones de Edición Manual Interactivas en el Canvas HUD
+    const btnAgregar = document.getElementById("btn-modo-agregar");
+    const btnEliminar = document.getElementById("btn-modo-eliminar");
+    const btnVaciar = document.getElementById("btn-vaciar-paneles");
+    const elTextoGuia = document.getElementById("texto-indicador-modo");
+
+    if (btnAgregar) {
+      btnAgregar.addEventListener("click", () => {
+        const modoActual = this.detectorPaneles.obtenerModoEdicion();
+        const nuevoModo = modoActual === "agregar" ? "ninguno" : "agregar";
+        this.detectorPaneles.fijarModoEdicion(nuevoModo);
+
+        btnAgregar.style.borderColor = nuevoModo === "agregar" ? "#41D0FB" : "rgba(82, 154, 252, 0.5)";
+        btnAgregar.style.backgroundColor = nuevoModo === "agregar" ? "#529AFC" : "rgba(82, 154, 252, 0.12)";
+        btnAgregar.style.color = nuevoModo === "agregar" ? "#0b1120" : "#41D0FB";
+
+        if (btnEliminar) {
+          btnEliminar.style.borderColor = "rgba(82, 154, 252, 0.5)";
+          btnEliminar.style.backgroundColor = "rgba(82, 154, 252, 0.12)";
+          btnEliminar.style.color = "#41D0FB";
+        }
+
+        if (elTextoGuia) {
+          if (nuevoModo === "agregar") {
+            elTextoGuia.innerHTML = `<span style="color: #41D0FB;"><strong>Modo Agregar Activo:</strong> Haz clic en cualquier parte del lienzo oscuro para colocar un panel, o arrastra el ratón para dibujarlo.</span>`;
+          } else {
+            elTextoGuia.innerHTML = `<span><strong>Guía:</strong> Haz clic en <strong>"Agregar Panel"</strong> o <strong>"Modo Eliminar"</strong> para modificar el plano.</span>`;
+          }
+        }
+      });
+    }
+
+    if (btnEliminar) {
+      btnEliminar.addEventListener("click", () => {
+        const modoActual = this.detectorPaneles.obtenerModoEdicion();
+        const nuevoModo = modoActual === "eliminar" ? "ninguno" : "eliminar";
+        this.detectorPaneles.fijarModoEdicion(nuevoModo);
+
+        btnEliminar.style.borderColor = nuevoModo === "eliminar" ? "#ef4444" : "rgba(82, 154, 252, 0.5)";
+        btnEliminar.style.backgroundColor = nuevoModo === "eliminar" ? "rgba(239, 68, 68, 0.3)" : "rgba(82, 154, 252, 0.12)";
+        btnEliminar.style.color = nuevoModo === "eliminar" ? "#fca5a5" : "#41D0FB";
+
+        if (btnAgregar) {
+          btnAgregar.style.borderColor = "rgba(82, 154, 252, 0.5)";
+          btnAgregar.style.backgroundColor = "rgba(82, 154, 252, 0.12)";
+          btnAgregar.style.color = "#41D0FB";
+        }
+
+        if (elTextoGuia) {
+          if (nuevoModo === "eliminar") {
+            elTextoGuia.innerHTML = `<span style="color: #fca5a5;"><strong>Modo Eliminar Activo:</strong> Haz clic sobre cualquier panel existente del lienzo para borrarlo.</span>`;
+          } else {
+            elTextoGuia.innerHTML = `<span><strong>Guía:</strong> Haz clic en <strong>"Agregar Panel"</strong> o <strong>"Modo Eliminar"</strong> para modificar el plano.</span>`;
+          }
+        }
+      });
+    }
+
+    if (btnVaciar) {
+      btnVaciar.addEventListener("click", () => {
+        this.detectorPaneles.vaciarTodosLosPaneles();
+        if (this.deteccionActual) {
+          this.deteccionActual.totalPanelesDetectados = 0;
+          this.deteccionActual.cajasDelimitadoras = [];
+        }
+        if (elTextoGuia) {
+          elTextoGuia.innerHTML = `<span>Se han borrado todos los paneles. Presiona <strong>"Agregar Panel"</strong> para dibujar uno nuevo.</span>`;
+        }
+        this.ejecutarSimulacionCompleta();
       });
     }
 

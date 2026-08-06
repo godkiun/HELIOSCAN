@@ -131,16 +131,26 @@ body {
 
 /* Layout Principal de la App */
 .app-contenedor {
-  max-width: 1440px;
+  max-width: 1480px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1.75rem 2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.grid-superior-equilibrado {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 2rem;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.seccion-dashboard-fullwidth {
+  width: 100%;
 }
 
 @media (max-width: 1024px) {
-  .app-contenedor {
+  .grid-superior-equilibrado {
     grid-template-columns: 1fr;
   }
 }
