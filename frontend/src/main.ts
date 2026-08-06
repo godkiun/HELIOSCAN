@@ -113,7 +113,7 @@ export class AplicacionHelioScan {
       this.detectorPaneles.renderizarDetecciones(this.deteccionActual);
 
       if (elResumen) {
-        elResumen.innerHTML = `📍 Captura satelital lista (Zoom Nivel ${resultadoZoom.zoom}). Presiona <strong>"Escanear paneles en la foto"</strong> para analizar la casa.`;
+        elResumen.innerHTML = `Captura satelital lista (Zoom Nivel ${resultadoZoom.zoom}). Presiona <strong>"Generar plano de paneles"</strong> para analizar.`;
       }
     } else {
       // Manejo de error si no se encuentra vista satelital suficiente
@@ -128,7 +128,7 @@ export class AplicacionHelioScan {
       };
 
       if (elResumen) {
-        elResumen.innerHTML = `⚠️ <strong style="color: #ef4444;">No hay vista satelital disponible con suficiente resolución para esta área.</strong><br/>Por favor selecciona otra ubicación o sube una fotografía propia de tu techo.`;
+        elResumen.innerHTML = `<strong style="color: #ef4444;">No hay vista satelital disponible con suficiente resolución para esta área.</strong><br/>Por favor selecciona otra ubicación o sube una fotografía propia de tu techo.`;
       }
     }
 
@@ -147,7 +147,7 @@ export class AplicacionHelioScan {
   private async buscarDireccionGeocoding(query: string): Promise<void> {
     if (!query || query.trim().length < 3) return;
     const btnBuscar = document.getElementById("btn-buscar-direccion");
-    if (btnBuscar) btnBuscar.textContent = "⏳ Buscando...";
+    if (btnBuscar) btnBuscar.textContent = "Buscando...";
 
     try {
       const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query.trim() + ", Mexico")}`;
@@ -169,69 +169,30 @@ export class AplicacionHelioScan {
   }
 
   private async generarImagenTerrenoSatelital(): Promise<void> {
-    const canvasTemp = document.createElement("canvas");
-    canvasTemp.width = 640;
-    canvasTemp.height = 480;
-    const ctx = canvasTemp.getContext("2d");
-
-    if (ctx) {
-      ctx.fillStyle = "#332612";
-      ctx.fillRect(0, 0, 640, 480);
-
-      ctx.fillStyle = "#1e3a1e";
-      ctx.beginPath();
-      ctx.arc(150, 180, 110, 0, Math.PI * 2);
-      ctx.arc(380, 260, 140, 0, Math.PI * 2);
-      ctx.arc(520, 120, 90, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = "#2d5a2d";
-      ctx.beginPath();
-      ctx.arc(170, 190, 80, 0, Math.PI * 2);
-      ctx.arc(360, 240, 95, 0, Math.PI * 2);
-      ctx.arc(500, 140, 60, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    const dataUrl = canvasTemp.toDataURL("image/jpeg");
-    await this.detectorPaneles.cargarImagenDesdeUrl(dataUrl);
+    await this.cargarImagenTechoPaneles();
   }
 
   private async cargarImagenTechoPaneles(): Promise<void> {
-    const canvasTemp = document.createElement("canvas");
-    canvasTemp.width = 640;
-    canvasTemp.height = 480;
-    const ctx = canvasTemp.getContext("2d");
-
-    if (ctx) {
-      ctx.fillStyle = "#1a2233";
-      ctx.fillRect(0, 0, 640, 480);
-
-      ctx.fillStyle = "#3d4b66";
-      ctx.fillRect(100, 100, 440, 280);
-
-      ctx.fillStyle = "#1e3a8a";
-      ctx.strokeStyle = "#D4AF37";
-      ctx.lineWidth = 3;
-
-      const filas = 2;
-      const cols = 3;
-      for (let f = 0; f < filas; f++) {
-        for (let c = 0; c < cols; c++) {
-          const x = 140 + c * 120;
-          const y = 140 + f * 100;
-          ctx.fillRect(x, y, 95, 75);
-          ctx.strokeRect(x, y, 95, 75);
-        }
-      }
-    }
-
-    const dataUrl = canvasTemp.toDataURL("image/jpeg");
+    // Generar SVG satelital con techo y paneles solares instalados
+    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480">
+      <rect width="640" height="480" fill="#3b3f46"/>
+      <polygon points="120,60 520,60 580,420 60,420" fill="#64748b" stroke="#334155" stroke-width="4"/>
+      <line x1="320" y1="60" x2="320" y2="420" stroke="#1e293b" stroke-width="3"/>
+      <!-- Arreglo 1 (Izquierda) -->
+      <rect x="150" y="140" width="60" height="90" fill="#0f172a" stroke="#FC8B26" stroke-width="3" rx="4"/>
+      <rect x="220" y="140" width="60" height="90" fill="#0f172a" stroke="#FC8B26" stroke-width="3" rx="4"/>
+      <rect x="150" y="240" width="60" height="90" fill="#0f172a" stroke="#FC8B26" stroke-width="3" rx="4"/>
+      <rect x="220" y="240" width="60" height="90" fill="#0f172a" stroke="#FC8B26" stroke-width="3" rx="4"/>
+      <!-- Arreglo 2 (Derecha) -->
+      <rect x="360" y="140" width="60" height="90" fill="#0f172a" stroke="#FC8B26" stroke-width="3" rx="4"/>
+      <rect x="430" y="140" width="60" height="90" fill="#0f172a" stroke="#FC8B26" stroke-width="3" rx="4"/>
+    </svg>`;
+    const dataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(svgContent)}`;
     await this.detectorPaneles.cargarImagenDesdeUrl(dataUrl);
   }
 
   private async cargarImagenPredeterminada(): Promise<void> {
-    await this.generarImagenTerrenoSatelital();
+    await this.cargarImagenTechoPaneles();
   }
 
   private configurarEventosUI(): void {
@@ -289,7 +250,7 @@ export class AplicacionHelioScan {
           const elResumen = document.getElementById("resumen-deteccion-ia");
           if (elResumen) {
             elResumen.innerHTML = `
-              ✅ Escaneo completado en <strong>${resultado.tiempoProcesamientoMs} ms</strong>.<br/>
+              Escaneo completado en <strong>${resultado.tiempoProcesamientoMs} ms</strong>.<br/>
               Techo demo cargado. Paneles detectados: <strong>${resultado.totalPanelesDetectados}</strong>
               (Certeza promedio: ${(resultado.confianzaPromedio * 100).toFixed(1)}%).
             `;
@@ -303,7 +264,7 @@ export class AplicacionHelioScan {
     const btnDetectar = document.getElementById("btn-detectar-ia");
     if (btnDetectar) {
       btnDetectar.addEventListener("click", async () => {
-        btnDetectar.textContent = "⏳ Analizando foto...";
+        btnDetectar.textContent = "Analizando plano...";
         const blobImagen = await this.detectorPaneles.obtenerCanvasBlob();
         const ctx = this.detectorPaneles.obtenerContexto2D();
         const ancho = this.detectorPaneles.obtenerAncho();
@@ -322,9 +283,9 @@ export class AplicacionHelioScan {
           };
           const elResumen = document.getElementById("resumen-deteccion-ia");
           if (elResumen) {
-            elResumen.innerHTML = `⚠️ <strong style="color: #ef4444;">No hay vista satelital disponible con suficiente resolución para esta área.</strong><br/>No se ejecutó inferencia para evitar falsos positivos.`;
+            elResumen.innerHTML = `<strong style="color: #ef4444;">No hay vista satelital disponible con suficiente resolución para esta área.</strong><br/>No se ejecutó inferencia para evitar falsos positivos.`;
           }
-          btnDetectar.textContent = "🔍 Escanear paneles en la foto";
+          btnDetectar.textContent = "Generar plano de paneles";
           return;
         }
 
@@ -336,23 +297,23 @@ export class AplicacionHelioScan {
           const elResumen = document.getElementById("resumen-deteccion-ia");
           if (elResumen) {
             if (!resultado.exito) {
-              elResumen.innerHTML = `⚠️ <strong style="color: #ef4444;">${resultado.mensaje}</strong>`;
+              elResumen.innerHTML = `<strong style="color: #ef4444;">${resultado.mensaje}</strong>`;
             } else if (resultado.totalPanelesDetectados > 0) {
               elResumen.innerHTML = `
-                ✅ Escaneo completado en <strong>${resultado.tiempoProcesamientoMs} ms</strong>.<br/>
+                Escaneo completado en <strong>${resultado.tiempoProcesamientoMs} ms</strong>.<br/>
                 Paneles detectados: <strong>${resultado.totalPanelesDetectados}</strong>
                 (Certeza promedio: ${(resultado.confianzaPromedio * 100).toFixed(1)}%).
               `;
             } else {
               elResumen.innerHTML = `
-                📍 Escaneo completado en <strong>${resultado.tiempoProcesamientoMs} ms</strong>.<br/>
+                Escaneo completado en <strong>${resultado.tiempoProcesamientoMs} ms</strong>.<br/>
                 <strong>No se detectaron paneles solares instalados</strong> en esta propiedad.
               `;
             }
           }
           this.ejecutarSimulacionCompleta();
         }
-        btnDetectar.textContent = "🔍 Escanear paneles en la foto";
+        btnDetectar.textContent = "Generar plano de paneles";
       });
     }
 

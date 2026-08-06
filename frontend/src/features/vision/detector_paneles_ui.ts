@@ -107,7 +107,7 @@ export class ComponenteDetectorPaneles {
     // Etiqueta de encabezado del plano HUD (#41D0FB)
     this.contexto2D.fillStyle = "#41D0FB";
     this.contexto2D.font = "bold 11px Outfit, monospace";
-    this.contexto2D.fillText("📐 PLANO ESQUEMÁTICO DE DISPOSICIÓN SOLAR VECTORS", 15, 22);
+    this.contexto2D.fillText("PLANO ESQUEMÁTICO DE DISPOSICIÓN SOLAR VECTORS", 15, 22);
 
     if (!this.deteccionesActuales || !this.deteccionesActuales.cajasDelimitadoras || this.deteccionesActuales.cajasDelimitadoras.length === 0) {
       this.contexto2D.fillStyle = "#529AFC";
