@@ -199,7 +199,7 @@ export function esCuadroErrorGris(ctx: CanvasRenderingContext2D, ancho: number, 
       totalPixeles++;
     }
 
-    if (totalPixeles === 0) return true;
+    if (totalPixeles === 0) return false;
 
     const mediaR = sumaR / totalPixeles;
     const mediaG = sumaG / totalPixeles;
@@ -214,14 +214,37 @@ export function esCuadroErrorGris(ctx: CanvasRenderingContext2D, ancho: number, 
 
     const desviacionEstandar = Math.sqrt(varSuma / totalPixeles);
 
-    // Si la desviación estándar es muy baja (<18) o el promedio es gris uniforme de error (195-245 con desv < 24)
-    if (desviacionEstandar < 18.0) return true;
-    if (mediaGlobal >= 195 && mediaGlobal <= 245 && desviacionEstandar < 24.0) return true;
+    // Mosaico de error Esri 'Map data not yet available' es un cuadro gris claro uniforme (media 185-245 y stddev < 15.0)
+    if (mediaGlobal >= 185 && mediaGlobal <= 245 && desviacionEstandar < 15.0) {
+      return true;
+    }
 
     return false;
   } catch (e) {
     return false;
   }
+}
+
+export async function esImagenUrlErrorTile(url: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const c = document.createElement("canvas");
+        c.width = 256;
+        c.height = 256;
+        const ctx = c.getContext("2d");
+        if (!ctx) return resolve(false);
+        ctx.drawImage(img, 0, 0, 256, 256);
+        resolve(esCuadroErrorGris(ctx, 256, 256));
+      } catch {
+        resolve(false);
+      }
+    };
+    img.onerror = () => resolve(true);
+    img.src = url;
+  });
 }
 
 export async function obtenerImagenSatelitalReal(latitud: number, longitud: number, zoom: number = 18): Promise<string> {

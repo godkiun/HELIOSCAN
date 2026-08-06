@@ -106,12 +106,8 @@ def es_imagen_tile_error_o_invalida(img_pil) -> bool:
         stddev_promedio = sum(stat.stddev) / len(stat.stddev)
         mean_promedio = sum(stat.mean) / len(stat.mean)
         
-        # El cuadro de error de mapas es gris casi uniforme (desviación estándar baja < 18)
-        if stddev_promedio < 18.0:
-            return True
-            
-        # Si el promedio es muy cercano a gris claro uniforme (200-240) y desviación < 25
-        if 195.0 <= mean_promedio <= 245.0 and stddev_promedio < 24.0:
+        # El cuadro de error de mapas Esri es un tono gris claro uniforme (mean 185-245 y stddev < 15.0)
+        if 185.0 <= mean_promedio <= 245.0 and stddev_promedio < 15.0:
             return True
             
         return False

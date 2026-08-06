@@ -3,6 +3,7 @@ import {
   obtenerImagenSatelitalReal,
   obtenerImagenSatelitalConFallbackZoom,
   esCuadroErrorGris,
+  esImagenUrlErrorTile,
   detectarPanelesSolares,
   DeteccionPanelesRespuesta,
 } from "./core/cliente_api";
@@ -24,49 +25,47 @@ import {
 } from "./features/solar-calculator/cliente_wasm";
 import { TipoTarifaCfe, ResultadoAnalisisSolar } from "./features/solar-calculator/tipos";
 
-class AplicacionHelioScan {
-  private visorMapa: VisorMapaHelioScan;
-  private detectorPaneles: ComponenteDetectorPaneles;
-  private tableroResultados: TableroResultados;
-
-  private irradianciaActualGhi: number = 5.8;
-  private deteccionActual: DeteccionPanelesRespuesta | null = null;
+export class AplicacionHelioScan {
+  private visorMapa!: VisorMapaHelioScan;
+  private detectorPaneles!: ComponenteDetectorPaneles;
+  private tableroResultados!: TableroResultados;
+  private irradianciaActualGhi: number = 5.2; // Valor por defecto
+  private deteccionActual: DeteccionPanelesRespuesta = {
+    exito: true,
+    totalPanelesDetectados: 0,
+    confianzaPromedio: 0,
+    cajasDelimitadoras: [],
+    mensaje: "Sin analizar",
+    tiempoProcesamientoMs: 0,
+  };
   private ultimoResultadoCalculo: ResultadoAnalisisSolar | null = null;
 
-  constructor() {
-    this.visorMapa = new VisorMapaHelioScan();
-    this.detectorPaneles = new ComponenteDetectorPaneles();
-    this.tableroResultados = new TableroResultados();
-  }
-
   public async iniciar(): Promise<void> {
-    console.log("☀️ Iniciando HelioScan App...");
+    // 1. Inicializar Motor WASM de CFE
+    await inicializarMotorSolar();
 
-    // 1. Inicializar motor Rust compilado a WebAssembly
-    try {
-      await inicializarMotorSolar();
-      console.log("✅ Motor Rust / Wasm inicializado correctamente.");
-    } catch (err) {
-      console.error("Error al cargar módulo Wasm:", err);
-    }
+    // 2. Inicializar componentes UI
+    this.detectorPaneles = new ComponenteDetectorPaneles();
+    this.detectorPaneles.inicializar("lienzo-vision");
 
-    // 2. Inicializar Mapa Interactivo con Leaflet + Esri World Imagery
+    this.tableroResultados = new TableroResultados();
+    this.tableroResultados.inicializar("contenedor-dashboard");
+
+    // 3. Inicializar mapa satelital Leaflet (Lázaro Cárdenas, Michoacán por defecto)
+    this.visorMapa = new VisorMapaHelioScan();
+    const posInicial = { lat: 17.95833, lng: -102.19722 };
+
     this.visorMapa.inicializar("mapa-satelital", (ubicacion) => {
       this.alCambiarUbicacion(ubicacion.lat, ubicacion.lng);
     });
 
-    // 3. Inicializar Componente de Detección de Visión Canvas
-    this.detectorPaneles.inicializar("lienzo-vision");
-    await this.cargarImagenPredeterminada();
-
-    // 4. Inicializar Tablero de Resultados Dashboard
-    this.tableroResultados.inicializar("contenedor-dashboard");
-
-    // 5. Configurar escuchadores de eventos UI
+    // 4. Configurar eventos de botones y formulario
     this.configurarEventosUI();
 
-    // 6. Cargar datos solares de ubicación por defecto (Lázaro Cárdenas)
-    const posInicial = this.visorMapa.obtenerUbicacion();
+    // 5. Cargar imagen de techo de ejemplo inicial
+    await this.cargarImagenPredeterminada();
+
+    // 6. Consultar ubicación inicial
     await this.alCambiarUbicacion(posInicial.lat, posInicial.lng);
 
     // 7. Ejecutar simulación inicial
@@ -77,34 +76,60 @@ class AplicacionHelioScan {
     const elLat = document.getElementById("val-lat");
     const elLng = document.getElementById("val-lng");
     const elIrr = document.getElementById("val-irradiancia");
+    const elResumen = document.getElementById("resumen-deteccion-ia");
 
     if (elLat) elLat.textContent = lat.toFixed(5);
     if (elLng) elLng.textContent = lng.toFixed(5);
-
     if (elIrr) elIrr.textContent = "Consultando NASA POWER...";
 
-    // Descargar captura de imagen satelital REAL de Esri centrada exactamente en el pin
-    const urlImagenReal = await obtenerImagenSatelitalReal(lat, lng);
-    if (urlImagenReal) {
-      await this.detectorPaneles.cargarImagenDesdeUrl(urlImagenReal);
-    } else {
-      await this.generarImagenTerrenoSatelital();
+    if (elResumen) {
+      elResumen.innerHTML = `⏳ Verificando resolución satelital de la zona...`;
     }
 
-    // Resetear las cajas de detección anteriores al mover la ubicación
-    this.deteccionActual = {
-      exito: true,
-      totalPanelesDetectados: 0,
-      confianzaPromedio: 0,
-      cajasDelimitadoras: [],
-      mensaje: "Zona lista para escanear",
-      tiempoProcesamientoMs: 0,
-    };
-    this.detectorPaneles.renderizarDetecciones(this.deteccionActual);
+    // 1. LÓGICA DE FALLBACK DINÁMICO PARA EL ZOOM (18 -> 17 -> 16 -> 15 -> 14)
+    const resultadoZoom = await obtenerImagenSatelitalConFallbackZoom(
+      lat,
+      lng,
+      18,
+      14,
+      async (url: string) => {
+        const esErrorTile = await esImagenUrlErrorTile(url);
+        return !esErrorTile;
+      }
+    );
 
-    const elResumen = document.getElementById("resumen-deteccion-ia");
-    if (elResumen) {
-      elResumen.innerHTML = `📍 Captura satelital actualizada. Presiona <strong>"Escanear paneles en la foto"</strong> para analizar la casa.`;
+    if (resultadoZoom.imagenValida && resultadoZoom.url) {
+      // Cargar captura de alta resolución encontrada
+      await this.detectorPaneles.cargarImagenDesdeUrl(resultadoZoom.url);
+
+      this.deteccionActual = {
+        exito: true,
+        totalPanelesDetectados: 0,
+        confianzaPromedio: 0,
+        cajasDelimitadoras: [],
+        mensaje: "Zona lista para escanear",
+        tiempoProcesamientoMs: 0,
+      };
+      this.detectorPaneles.renderizarDetecciones(this.deteccionActual);
+
+      if (elResumen) {
+        elResumen.innerHTML = `📍 Captura satelital lista (Zoom Nivel ${resultadoZoom.zoom}). Presiona <strong>"Escanear paneles en la foto"</strong> para analizar la casa.`;
+      }
+    } else {
+      // Manejo de error si no se encuentra vista satelital suficiente
+      this.detectorPaneles.limpiarLienzo();
+      this.deteccionActual = {
+        exito: false,
+        totalPanelesDetectados: 0,
+        confianzaPromedio: 0,
+        cajasDelimitadoras: [],
+        mensaje: "No hay vista satelital disponible con suficiente resolución para esta área.",
+        tiempoProcesamientoMs: 0,
+      };
+
+      if (elResumen) {
+        elResumen.innerHTML = `⚠️ <strong style="color: #ef4444;">No hay vista satelital disponible con suficiente resolución para esta área.</strong><br/>Por favor selecciona otra ubicación o sube una fotografía propia de tu techo.`;
+      }
     }
 
     // Consultar datos de irradiancia solar de la NASA
