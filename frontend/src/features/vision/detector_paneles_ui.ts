@@ -53,8 +53,20 @@ export class ComponenteDetectorPaneles {
     });
   }
 
+  public limpiarLienzo(): void {
+    this.imagenActual = null;
+    this.deteccionesActuales = null;
+    if (this.contexto2D && this.lienzoCanvas) {
+      this.contexto2D.clearRect(0, 0, this.lienzoCanvas.width, this.lienzoCanvas.height);
+    }
+  }
+
   public renderizarDetecciones(detecciones: DeteccionPanelesRespuesta): void {
-    this.deteccionesActuales = detecciones;
+    if (!detecciones.exito) {
+      this.deteccionesActuales = null;
+    } else {
+      this.deteccionesActuales = detecciones;
+    }
     this.redibujarLienzo();
   }
 

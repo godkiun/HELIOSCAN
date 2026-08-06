@@ -178,18 +178,96 @@ export async function detectarPanelesSolares(
   };
 }
 
-export async function obtenerImagenSatelitalReal(latitud: number, longitud: number): Promise<string | null> {
+export function latLonATilesEsri(lat: number, lon: number, zoom: number) {
+  const n = Math.pow(2, zoom);
+  const xTile = Math.floor(((lon + 180) / 360) * n);
+  const latRad = (lat * Math.PI) / 180;
+  const yTile = Math.floor(((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n);
+  return { xTile, yTile };
+}
+
+export function esCuadroErrorGris(ctx: CanvasRenderingContext2D, ancho: number, alto: number): boolean {
   try {
-    const respuesta = await fetch(`/api/v1/roof-satellite-image?lat=${latitud}&lon=${longitud}`);
+    const imgData = ctx.getImageData(0, 0, ancho, alto).data;
+    let sumaR = 0, sumaG = 0, sumaB = 0;
+    let totalPixeles = 0;
+
+    for (let i = 0; i < imgData.length; i += 16) {
+      sumaR += imgData[i];
+      sumaG += imgData[i + 1];
+      sumaB += imgData[i + 2];
+      totalPixeles++;
+    }
+
+    if (totalPixeles === 0) return true;
+
+    const mediaR = sumaR / totalPixeles;
+    const mediaG = sumaG / totalPixeles;
+    const mediaB = sumaB / totalPixeles;
+    const mediaGlobal = (mediaR + mediaG + mediaB) / 3;
+
+    let varSuma = 0;
+    for (let i = 0; i < imgData.length; i += 16) {
+      const pMedia = (imgData[i] + imgData[i + 1] + imgData[i + 2]) / 3;
+      varSuma += Math.pow(pMedia - mediaGlobal, 2);
+    }
+
+    const desviacionEstandar = Math.sqrt(varSuma / totalPixeles);
+
+    // Si la desviación estándar es muy baja (<18) o el promedio es gris uniforme de error (195-245 con desv < 24)
+    if (desviacionEstandar < 18.0) return true;
+    if (mediaGlobal >= 195 && mediaGlobal <= 245 && desviacionEstandar < 24.0) return true;
+
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
+export async function obtenerImagenSatelitalReal(latitud: number, longitud: number, zoom: number = 18): Promise<string> {
+  try {
+    const respuesta = await fetch(`/api/v1/roof-satellite-image?lat=${latitud}&lon=${longitud}&zoom=${zoom}`);
     if (respuesta.ok) {
       const datos = await respuesta.json();
-      return datos.url || null;
+      if (datos.url) return datos.url;
     }
   } catch (err) {
-    console.warn("No se pudo obtener imagen satelital real de la API:", err);
+    console.warn("No se pudo obtener la URL de imagen satelital del backend:", err);
   }
-  // Generar URL de Esri ArcGIS World Imagery directamente como fallback
-  return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/19/${latitud}/${longitud}`;
+  const { xTile, yTile } = latLonATilesEsri(latitud, longitud, zoom);
+  return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${yTile}/${xTile}`;
 }
+
+export interface ResultadoFallbackZoom {
+  url: string | null;
+  zoom: number;
+  imagenValida: boolean;
+}
+
+export async function obtenerImagenSatelitalConFallbackZoom(
+  latitud: number,
+  longitud: number,
+  zoomInicial: number = 18,
+  minZoom: number = 14,
+  probarImagenCanvas?: (url: string) => Promise<boolean>
+): Promise<ResultadoFallbackZoom> {
+  for (let z = zoomInicial; z >= minZoom; z--) {
+    const url = await obtenerImagenSatelitalReal(latitud, longitud, z);
+    
+    if (probarImagenCanvas) {
+      const esValida = await probarImagenCanvas(url);
+      if (esValida) {
+        console.log(`✅ Vista satelital válida encontrada a Nivel de Zoom ${z}`);
+        return { url, zoom: z, imagenValida: true };
+      }
+      console.warn(`⚠️ Zoom ${z} devolvió mosaico sin resolución ('Map data not yet available'). Probando Zoom ${z - 1}...`);
+    } else {
+      return { url, zoom: z, imagenValida: true };
+    }
+  }
+
+  return { url: null, zoom: minZoom, imagenValida: false };
+}
+
 
 

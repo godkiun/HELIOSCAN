@@ -1,5 +1,4 @@
-import "./index.css";
-import { obtenerDatosNasa, obtenerImagenSatelitalReal, detectarPanelesSolares } from "./core/cliente_api";
+import { obtenerDatosNasa, obtenerImagenSatelitalReal, esCuadroErrorGris, detectarPanelesSolares, } from "./core/cliente_api";
 import { VisorMapaHelioScan } from "./features/map/visor_mapa";
 import { ComponenteDetectorPaneles } from "./features/vision/detector_paneles_ui";
 import { TableroResultados } from "./features/dashboard/tablero_resultados";
@@ -233,13 +232,34 @@ class AplicacionHelioScan {
                 const ctx = this.detectorPaneles.obtenerContexto2D();
                 const ancho = this.detectorPaneles.obtenerAncho();
                 const alto = this.detectorPaneles.obtenerAlto();
+                // 2. VALIDACIÓN PREVIA A LA INFERENCIA: Filtro de falsos positivos en cuadros de error
+                if (esCuadroErrorGris(ctx, ancho, alto)) {
+                    this.detectorPaneles.limpiarLienzo();
+                    this.deteccionActual = {
+                        exito: false,
+                        totalPanelesDetectados: 0,
+                        confianzaPromedio: 0,
+                        cajasDelimitadoras: [],
+                        mensaje: "No hay vista satelital disponible con suficiente resolución para esta área.",
+                        tiempoProcesamientoMs: 0,
+                    };
+                    const elResumen = document.getElementById("resumen-deteccion-ia");
+                    if (elResumen) {
+                        elResumen.innerHTML = `⚠️ <strong style="color: #ef4444;">No hay vista satelital disponible con suficiente resolución para esta área.</strong><br/>No se ejecutó inferencia para evitar falsos positivos.`;
+                    }
+                    btnDetectar.textContent = "🔍 Escanear paneles en la foto";
+                    return;
+                }
                 if (blobImagen) {
                     const resultado = await detectarPanelesSolares(blobImagen, ctx, ancho, alto);
                     this.deteccionActual = resultado;
                     this.detectorPaneles.renderizarDetecciones(resultado);
                     const elResumen = document.getElementById("resumen-deteccion-ia");
                     if (elResumen) {
-                        if (resultado.totalPanelesDetectados > 0) {
+                        if (!resultado.exito) {
+                            elResumen.innerHTML = `⚠️ <strong style="color: #ef4444;">${resultado.mensaje}</strong>`;
+                        }
+                        else if (resultado.totalPanelesDetectados > 0) {
                             elResumen.innerHTML = `
                 ✅ Escaneo completado en <strong>${resultado.tiempoProcesamientoMs} ms</strong>.<br/>
                 Paneles detectados: <strong>${resultado.totalPanelesDetectados}</strong>

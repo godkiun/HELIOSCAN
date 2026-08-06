@@ -86,16 +86,53 @@ async def get_nasa_data(lat: float = Query(...), lon: float = Query(...)):
         "fuente": "HelioScan Solar Estimator (Fallback)"
     }
 
+import math
+
+def lat_lon_to_tile(lat: float, lon: float, zoom: int):
+    n = 2 ** zoom
+    x_tile = int((lon + 180.0) / 360.0 * n)
+    lat_rad = math.radians(lat)
+    y_tile = int((1.0 - math.asinh(math.tan(lat_rad)) / math.pi) / 2.0 * n)
+    return x_tile, y_tile
+
+def es_imagen_tile_error_o_invalida(img_pil) -> bool:
+    """
+    Detecta si la imagen recibida es el cuadro gris de error ('Map data not yet available')
+    analizando la varianza de color y la desviación estándar de los píxeles.
+    """
+    try:
+        from PIL import ImageStat
+        stat = ImageStat.Stat(img_pil.convert("RGB"))
+        stddev_promedio = sum(stat.stddev) / len(stat.stddev)
+        mean_promedio = sum(stat.mean) / len(stat.mean)
+        
+        # El cuadro de error de mapas es gris casi uniforme (desviación estándar baja < 18)
+        if stddev_promedio < 18.0:
+            return True
+            
+        # Si el promedio es muy cercano a gris claro uniforme (200-240) y desviación < 25
+        if 195.0 <= mean_promedio <= 245.0 and stddev_promedio < 24.0:
+            return True
+            
+        return False
+    except Exception as e:
+        print(f"Error evaluando píxeles de imagen: {e}")
+        return False
+
 @app.get("/api/v1/roof-satellite-image")
-def get_roof_satellite_image(lat: float = Query(...), lon: float = Query(...)):
+def get_roof_satellite_image(lat: float = Query(...), lon: float = Query(...), zoom: int = Query(19)):
     """
-    Retorna la URL del tile de alta resolución satelital de Esri World Imagery.
+    Retorna la URL del tile de alta resolución satelital de Esri World Imagery convertido a coordenadas Web Mercator.
     """
-    tile_url = f"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/19/{lat}/{lon}"
+    zoom_clamped = max(12, min(19, zoom))
+    x_tile, y_tile = lat_lon_to_tile(lat, lon, zoom_clamped)
+    tile_url = f"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{zoom_clamped}/{y_tile}/{x_tile}"
     return {
         "latitud": lat,
         "longitud": lon,
-        "zoom": 19,
+        "zoom": zoom_clamped,
+        "x_tile": x_tile,
+        "y_tile": y_tile,
         "url": tile_url,
         "proveedor": "Esri World Imagery (ArcGIS)"
     }
@@ -103,21 +140,33 @@ def get_roof_satellite_image(lat: float = Query(...), lon: float = Query(...)):
 @app.post("/api/v1/detect-panels", response_model=DeteccionRespuesta)
 async def detect_panels(archivo: UploadFile = File(...)):
     """
-    Endpoint de inferencia YOLOv8 / Visión por Computadora para detección de módulos fotovoltaicos.
+    Endpoint de inferencia YOLOv8 / Visión por Computadora con filtro previo de falsos positivos en mosaicos de error.
     """
     start_time = time.time()
     contents = await archivo.read()
     
-    # Intentar inferencia si YOLOv8 y PyTorch están disponibles
     try:
-        from ultralytics import YOLO
         import io
         from PIL import Image
+        img = Image.open(io.BytesIO(contents))
+        
+        # FILTRO PREVIO: Si la imagen cargada es el cuadro de error gris de la API de mapas, ABORTAR inferencia.
+        if es_imagen_tile_error_o_invalida(img):
+            elapsed = int((time.time() - start_time) * 1000)
+            return DeteccionRespuesta(
+                exito=False,
+                total_paneles_detectados=0,
+                confianza_promedio=0.0,
+                cajas_delimitadoras=[],
+                mensaje="No hay vista satelital disponible con suficiente resolución para esta área.",
+                tiempo_procesamiento_ms=elapsed
+            )
 
+        # Inferencia con YOLOv8 si existe modelo entrenado localmente
         model_path = os.path.join(os.path.dirname(__file__), "..", "..", "modelos", "panel_detector_yolov8n.pt")
         if os.path.exists(model_path):
+            from ultralytics import YOLO
             model = YOLO(model_path)
-            img = Image.open(io.BytesIO(contents))
             results = model.predict(img, imgsz=640, conf=0.25)
             
             cajas = []
@@ -153,7 +202,7 @@ async def detect_panels(archivo: UploadFile = File(...)):
 
     elapsed = int((time.time() - start_time) * 1000)
     
-    # Detección residencial por defecto
+    # Detección residencial por defecto solo si la imagen es válida
     cajas_demo = [
         CajaDelimitadora(x_min=0.22, y_min=0.31, x_max=0.38, y_max=0.46, confianza=0.94),
         CajaDelimitadora(x_min=0.39, y_min=0.31, x_max=0.55, y_max=0.46, confianza=0.92),
