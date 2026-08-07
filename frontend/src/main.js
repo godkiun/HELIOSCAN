@@ -3,12 +3,17 @@ import { VisorMapaHelioScan } from "./features/map/visor_mapa";
 import { ComponenteDetectorPaneles } from "./features/vision/detector_paneles_ui";
 import { TableroResultados } from "./features/dashboard/tablero_resultados";
 import { generarReportePdfHelioScan } from "./core/generador_pdf";
-import { inicializarMotorSolar, calcularTarifa01, calcularPdbt, calcularExcedentes, sugerirPaneles, calcularRoiAnios, calcularMitigacionCo2Kg, evaluarAlertaDac, calcularGeneracionAjustadaPR, calcularProyeccion25Anios, } from "./features/solar-calculator/cliente_wasm";
+import { inicializarMotorSolar, calcularPdbt, calcularExcedentes, sugerirPaneles, calcularRoiAnios, calcularMitigacionCo2Kg, evaluarAlertaDac, calcularGeneracionAjustadaPR, calcularProyeccion25Anios, 
+// Nuevas exportaciones: Tarifas 1A-1F + WhatsApp
+calcularTarifaResidencial, detectarZonaTarifariaPorCoords, generarUrlWhatsappCotizacion, } from "./features/solar-calculator/cliente_wasm";
+import { calcularBancoBaterias, renderizarSimuladorBaterias, } from "./features/battery/simulador_baterias";
 export class AplicacionHelioScan {
     visorMapa;
     detectorPaneles;
     tableroResultados;
-    irradianciaActualGhi = 5.2; // Valor por defecto
+    irradianciaActualGhi = 5.2;
+    latActual = 17.9583;
+    lngActual = -102.1964;
     deteccionActual = {
         exito: true,
         totalPanelesDetectados: 0,
@@ -46,6 +51,8 @@ export class AplicacionHelioScan {
         this.visorMapa = new VisorMapaHelioScan();
         const posInicial = { lat: 17.95833, lng: -102.19722 };
         this.visorMapa.inicializar("mapa-satelital", (ubicacion) => {
+            this.latActual = ubicacion.lat;
+            this.lngActual = ubicacion.lng;
             this.alCambiarUbicacion(ubicacion.lat, ubicacion.lng);
         });
         // 4. Configurar eventos de botones y formulario
@@ -110,8 +117,19 @@ export class AplicacionHelioScan {
         // Consultar datos de irradiancia solar de la NASA
         const datosNasa = await obtenerDatosNasa(lat, lng);
         this.irradianciaActualGhi = datosNasa.promedioDiarioKwhM2;
+        this.latActual = lat;
+        this.lngActual = lng;
         if (elIrr) {
             elIrr.textContent = `${this.irradianciaActualGhi.toFixed(2)} kWh/m²/día (${datosNasa.fuente})`;
+        }
+        // Auto-detectar zona tarifaria CFE si el usuario tiene "auto" seleccionado
+        const selectZona = document.getElementById("select-zona-termica");
+        if (selectZona && selectZona.value === "auto") {
+            const zonaDetectada = detectarZonaTarifariaPorCoords(lat, lng);
+            const badgeZona = document.getElementById("badge-zona-auto");
+            if (badgeZona) {
+                badgeZona.textContent = `Zona ${zonaDetectada} Auto`;
+            }
         }
         // Recalcular simulación
         this.ejecutarSimulacionCompleta();
@@ -374,17 +392,24 @@ export class AplicacionHelioScan {
         // Delegación de eventos para botones dinámicos en Dashboard (PDF y Modal)
         document.addEventListener("click", (e) => {
             const target = e.target;
-            if (target && target.id === "btn-exportar-pdf") {
+            // Subir por el árbol del DOM para manejar clics en hijos del botón (ej: el SVG)
+            const btnEl = target.closest ? target.closest("[id]") : target;
+            const id = btnEl?.id || target.id;
+            if (id === "btn-exportar-pdf") {
                 if (this.ultimoResultadoCalculo) {
-                    generarReportePdfHelioScan(this.ultimoResultadoCalculo);
+                    generarReportePdfHelioScan(this.ultimoResultadoCalculo, undefined, {
+                        resultado: this.ultimoResultadoCalculo,
+                        nombreCliente: "",
+                        ciudadCliente: "",
+                    });
                 }
             }
-            else if (target && target.id === "btn-abrir-cotizador") {
+            else if (id === "btn-abrir-cotizador") {
                 const modal = document.getElementById("modal-cotizador");
                 if (modal)
                     modal.style.display = "flex";
             }
-            else if (target && target.id === "btn-cerrar-modal") {
+            else if (id === "btn-cerrar-modal") {
                 const modal = document.getElementById("modal-cotizador");
                 if (modal)
                     modal.style.display = "none";
@@ -408,14 +433,33 @@ export class AplicacionHelioScan {
         const elTarifa = document.getElementById("select-tarifa");
         const elOrientacion = document.getElementById("select-orientacion");
         const elCostoSistema = document.getElementById("input-costo-sistema");
+        const elZonaTermica = document.getElementById("select-zona-termica");
         const consumoMensualKwh = elConsumo ? parseFloat(elConsumo.value) || 480 : 480;
         const tipoTarifa = elTarifa ? elTarifa.value : "tarifa_01";
         const factorOrientacion = elOrientacion ? parseFloat(elOrientacion.value) || 1.0 : 1.0;
         const costoSistemaMxn = elCostoSistema ? parseFloat(elCostoSistema.value) || 145000 : 145000;
-        // 1. Cálculo de factura CFE "Antes" (Sin paneles) con motor Wasm Rust
+        // Determinar zona tarifaria CFE 1-1F
+        let zonaTermica = "1";
+        const valorZona = elZonaTermica?.value ?? "auto";
+        if (valorZona === "auto") {
+            zonaTermica = detectarZonaTarifariaPorCoords(this.latActual, this.lngActual);
+        }
+        else {
+            zonaTermica = valorZona;
+        }
+        // Detectar si estamos en temporada de verano (mayo-octubre)
+        const mes = new Date().getMonth() + 1;
+        const esVerano = mes >= 5 && mes <= 10;
+        // 1. Cálculo de factura CFE "Antes" (Sin paneles) con motor de Tarifas Residenciales 1-1F
         let costoMensualAntesMxn = 0;
         if (tipoTarifa === "tarifa_01") {
-            costoMensualAntesMxn = calcularTarifa01(consumoMensualKwh, 75, 65, 1.05, 1.85, 3.65);
+            const resultTarifa = calcularTarifaResidencial(consumoMensualKwh, zonaTermica, esVerano);
+            costoMensualAntesMxn = resultTarifa.costoConIva;
+            // Actualizar badge de zona auto
+            const badge = document.getElementById("badge-zona-auto");
+            if (badge && valorZona === "auto") {
+                badge.textContent = `Zona ${zonaTermica} Auto`;
+            }
         }
         else {
             costoMensualAntesMxn = calcularPdbt(consumoMensualKwh, 12, 110, 135, 2.55);
@@ -468,6 +512,43 @@ export class AplicacionHelioScan {
         this.ultimoResultadoCalculo = resultadoFinal;
         // Renderizar Dashboard "Antes vs Después"
         this.tableroResultados.renderizar(resultadoFinal);
+        // Actualizar el href del botón WhatsApp con la cotización actual
+        const urlWa = generarUrlWhatsappCotizacion({
+            consumoMensualKwh,
+            panelesSugeridos,
+            ahorroMensualMxn,
+            ahorroAnualMxn,
+            costoEstimadoMxn: costoNetoSistemaMxn,
+            roiAnios,
+            generacionAnualKwh,
+            irradianciaGhi: this.irradianciaActualGhi,
+        });
+        // El botón se inyecta dinámicamente, así que usamos delegación
+        // Seteamos en un atributo del contenedor para usarlo en el click handler
+        const contenedorDash = document.getElementById("contenedor-dashboard");
+        if (contenedorDash)
+            contenedorDash.dataset.whatsappUrl = urlWa;
+        // Actualizar el <a> si ya existe en el DOM
+        const btnWa = document.getElementById("btn-whatsapp-cotizacion");
+        if (btnWa)
+            btnWa.href = urlWa;
+        // Renderizar Simulador de Baterías LiFePO4
+        const consumoDiarioKwh = consumoMensualKwh / 30;
+        const resultadoBaterias = calcularBancoBaterias({
+            consumoDiarioKwh,
+            horasAutonomiaDeseadas: 8,
+            voltajeSistemaDC: 48,
+            profundidadDescarga: 0.8,
+            eficienciaBateria: 0.95,
+            generacionSolarDiariaKwh: generacionMensualKwh / 30,
+        });
+        const contenedorBaterias = document.getElementById("contenedor-simulador-baterias");
+        const seccionBaterias = document.getElementById("seccion-baterias");
+        if (contenedorBaterias) {
+            contenedorBaterias.innerHTML = renderizarSimuladorBaterias(resultadoBaterias);
+        }
+        if (seccionBaterias)
+            seccionBaterias.style.display = "block";
     }
 }
 // Arrancar la aplicación cuando el DOM esté listo

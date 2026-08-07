@@ -625,3 +625,79 @@ body {
   color: #41D0FB;
   font-variant-numeric: tabular-nums;
 }
+
+/* ─── Simulador de Baterías LiFePO4 ─────────────────────────────────────── */
+.simulador-baterias-contenedor {
+  animation: fadeIn 0.45s var(--curva-transicion);
+}
+
+.simulador-baterias-header {
+  margin-bottom: 0.5rem;
+}
+
+.bateria-opcion {
+  background: rgba(11, 17, 32, 0.85);
+  border: 1px solid rgba(74, 172, 255, 0.3);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: border-color 0.2s var(--curva-transicion), box-shadow 0.2s var(--curva-transicion);
+}
+
+.bateria-opcion:hover {
+  border-color: #4AACFF;
+  box-shadow: 0 4px 20px rgba(74, 172, 255, 0.2);
+}
+
+.bateria-recomendada {
+  background: rgba(74, 172, 255, 0.08);
+  border-color: rgba(74, 172, 255, 0.55);
+  box-shadow: 0 0 20px rgba(74, 172, 255, 0.15);
+}
+
+.bateria-opcion-nombre {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.95rem;
+  color: #E2E8F0;
+}
+
+.badge-recomendado {
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: #4AACFF;
+  color: #0b1120;
+  padding: 0.15rem 0.55rem;
+  border-radius: 8px;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.bateria-opcion-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.bateria-opcion-specs span {
+  font-size: 0.8rem;
+  background: rgba(82, 154, 252, 0.12);
+  color: #94A3B8;
+  padding: 0.2rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid rgba(82, 154, 252, 0.25);
+}
+
+.bateria-opcion-precio {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.88rem;
+  color: #94A3B8;
+  border-top: 1px solid rgba(82, 154, 252, 0.15);
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+}

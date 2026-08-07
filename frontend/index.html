@@ -171,6 +171,23 @@
               </div>
 
               <div class="grupo-formulario">
+                <label class="etiqueta-formulario" for="select-zona-termica">
+                  Zona tarifaria por temperatura
+                  <span id="badge-zona-auto" style="margin-left:6px;font-size:0.75rem;background:rgba(65,208,251,0.15);color:#41D0FB;padding:1px 7px;border-radius:10px;font-weight:600;">Auto</span>
+                </label>
+                <select id="select-zona-termica" class="entrada-select">
+                  <option value="auto">Detectar automáticamente por coordenadas</option>
+                  <option value="1">Tarifa 1 — Zona Estándar (CDMX, Jalisco, Puebla)</option>
+                  <option value="1A">Tarifa 1A — Cálida 25°C+ (Veracruz, Tabasco)</option>
+                  <option value="1B">Tarifa 1B — Cálida 28°C+ (Guerrero, Michoacán Costa)</option>
+                  <option value="1C">Tarifa 1C — Cálida 30°C+ (Sinaloa, Colima)</option>
+                  <option value="1D">Tarifa 1D — Cálida 31°C+ (Tamaulipas, NL)</option>
+                  <option value="1E">Tarifa 1E — Muy Cálida 32°C+ (Sonora, BCS)</option>
+                  <option value="1F">Tarifa 1F — Extrema 33°C+ (Mexicali, Hermosillo)</option>
+                </select>
+              </div>
+
+              <div class="grupo-formulario">
                 <label class="etiqueta-formulario" for="select-orientacion">Orientación del techo</label>
                 <select id="select-orientacion" class="entrada-select">
                   <option value="1.0" selected>Sur (100% Óptima producción solar)</option>
@@ -201,6 +218,13 @@
               <p style="font-size: 1.1rem;">Presiona <strong>"Calcular mi ahorro"</strong> para ver la comparativa a pantalla completa.</p>
             </div>
           </div>
+        </div>
+      </section>
+
+      <!-- Sección Simulador de Baterías LiFePO4 (se muestra tras calcular) -->
+      <section class="seccion-dashboard-fullwidth" id="seccion-baterias" style="margin-top: 1.25rem; display: none;">
+        <div class="tarjeta-panel">
+          <div id="contenedor-simulador-baterias"></div>
         </div>
       </section>
     </main>
