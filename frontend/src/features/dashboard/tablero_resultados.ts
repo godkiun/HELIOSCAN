@@ -41,10 +41,7 @@ export class TableroResultados {
         <!-- Encabezado del Dashboard -->
         <div class="dashboard-encabezado">
           <div class="badge-solar-brillante">
-            <span>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align: -2px; margin-right: 4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              PROYECCIÓN DE AHORRO SOLAR
-            </span>
+            <span>⚡ PROYECCIÓN DE AHORRO SOLAR</span>
           </div>
           <h2 class="titulo-dashboard">Comparativa de tu recibo CFE</h2>
           <p class="subtitulo-dashboard">
@@ -55,9 +52,7 @@ export class TableroResultados {
         <!-- Tarjetas KPI Principales -->
         <div class="grid-kpi-tarjetas">
           <div class="kpi-tarjeta kpi-destacado-ahorro">
-            <div class="kpi-icono">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#FC8B26" stroke-width="2" width="28" height="28"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            </div>
+            <div class="kpi-icono">💰</div>
             <div class="kpi-contenido">
               <span class="kpi-etiqueta">Ahorro anual estimado</span>
               <h3 class="kpi-valor">${formateadorMoneda.format(ahorroAnualMxn)}</h3>
@@ -66,9 +61,7 @@ export class TableroResultados {
           </div>
 
           <div class="kpi-tarjeta">
-            <div class="kpi-icono">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#41D0FB" stroke-width="2" width="28" height="28"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
+            <div class="kpi-icono">⏱️</div>
             <div class="kpi-contenido">
               <span class="kpi-etiqueta">Recuperación de inversión</span>
               <h3 class="kpi-valor">${roiAnios.toFixed(1)} <small>años</small></h3>
@@ -77,9 +70,7 @@ export class TableroResultados {
           </div>
 
           <div class="kpi-tarjeta">
-            <div class="kpi-icono">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#4AACFF" stroke-width="2" width="28" height="28"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
-            </div>
+            <div class="kpi-icono">🌱</div>
             <div class="kpi-contenido">
               <span class="kpi-etiqueta">Impacto ambiental</span>
               <h3 class="kpi-valor">${mitigacionCo2KgAnual.toLocaleString("es-MX")} <small>kg CO₂/año</small></h3>
@@ -88,9 +79,7 @@ export class TableroResultados {
           </div>
 
           <div class="kpi-tarjeta">
-            <div class="kpi-icono">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#F79D42" stroke-width="2" width="28" height="28"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-            </div>
+            <div class="kpi-icono">☀️</div>
             <div class="kpi-contenido">
               <span class="kpi-etiqueta">Paneles recomendados</span>
               <h3 class="kpi-valor">${panelesSugeridos} <small>paneles</small></h3>
@@ -123,14 +112,14 @@ export class TableroResultados {
                 <strong>${formateadorMoneda.format(costoAnualAntes)}</strong>
               </div>
               <div class="barra-progreso-contenedor">
-                <div class="barra-progreso barra-roja" style="transform: scaleX(1); width: 100%;"></div>
+                <div class="barra-progreso barra-roja" style="width: 100%;"></div>
               </div>
             </div>
           </div>
 
           <!-- Flecha de Transformación -->
           <div class="transformacion-flecha">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            <span>➔</span>
           </div>
 
           <!-- Tarjeta Después -->
@@ -153,7 +142,7 @@ export class TableroResultados {
                 <strong>${formateadorMoneda.format(costoAnualDespues)}</strong>
               </div>
               <div class="barra-progreso-contenedor">
-                <div class="barra-progreso barra-verde" style="transform: scaleX(${(Math.max(0.05, (100 - porcentajeAhorro) / 100)).toFixed(2)}); width: 100%;"></div>
+                <div class="barra-progreso barra-verde" style="width: ${Math.max(5, (100 - porcentajeAhorro)).toFixed(0)}%;"></div>
               </div>
             </div>
           </div>
@@ -161,10 +150,7 @@ export class TableroResultados {
 
         <!-- Desglose Técnico y Tarifario -->
         <div class="panel-desglose-tecnico">
-          <h3>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="vertical-align: -3px; margin-right: 4px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-            Detalle del balance CFE (Net Metering)
-          </h3>
+          <h3>📊 Detalle del balance CFE (Net Metering)</h3>
           <div class="tabla-desglose">
             <div class="desglose-item">
               <span class="desglose-label">Generación solar anual:</span>
@@ -184,57 +170,8 @@ export class TableroResultados {
             </div>
           </div>
         </div>
-
-        ${resultado.alertaDac && resultado.alertaDac.esRiesgoDac ? `
-        <!-- Banner de Alerta DAC -->
-        <div style="margin-top: 20px; padding: 16px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 12px; color: #fca5a5;">
-          <h4 style="margin: 0 0 6px 0; font-size: 1rem;">${resultado.alertaDac.mensajeAlerta}</h4>
-          <p style="margin: 0; font-size: 0.88rem; opacity: 0.9;">
-            Tu consumo de <strong>${resultado.alertaDac.nivelConsumoKwh} kWh/mes</strong> sobrepasa el límite subsidiado CFE (${resultado.alertaDac.limiteDacKwh} kWh).
-          </p>
-        </div>
-        ` : ''}
-
-        ${resultado.proyeccion25Anios ? `
-        <!-- Proyección Financiera a 25 Años -->
-        <div style="margin-top: 24px; padding: 20px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(51, 65, 85, 0.6); border-radius: 16px;">
-          <h3 style="margin-top: 0; color: #f8fafc; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-            Proyección de Rendimiento a 25 Años (Performance Ratio PR: ${resultado.performanceRatio || 0.78})
-          </h3>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 12px;">
-            <div style="background: rgba(30, 41, 59, 0.6); padding: 14px; border-radius: 10px; border-left: 4px solid #10b981;">
-              <span style="display: block; font-size: 0.8rem; color: #94a3b8;">Ahorro Acumulado (25 años)</span>
-              <strong style="font-size: 1.25rem; color: #34d399;">${formateadorMoneda.format(resultado.proyeccion25Anios.ahorroAcumulado25AniosMxn)}</strong>
-            </div>
-            <div style="background: rgba(30, 41, 59, 0.6); padding: 14px; border-radius: 10px; border-left: 4px solid #3b82f6;">
-              <span style="display: block; font-size: 0.8rem; color: #94a3b8;">Valor Presente Neto (VPN)</span>
-              <strong style="font-size: 1.25rem; color: #60a5fa;">${formateadorMoneda.format(resultado.proyeccion25Anios.valorPresenteNetoMxn)}</strong>
-            </div>
-            <div style="background: rgba(30, 41, 59, 0.6); padding: 14px; border-radius: 10px; border-left: 4px solid #f59e0b;">
-              <span style="display: block; font-size: 0.8rem; color: #94a3b8;">Tasa Interna de Retorno (TIR)</span>
-              <strong style="font-size: 1.25rem; color: #fbbf24;">${resultado.proyeccion25Anios.tasaInternaRetornoPct}%</strong>
-            </div>
-          </div>
-        </div>
-        ` : ''}
-
-        <!-- Barra de Acciones: PDF + WhatsApp -->
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid rgba(82,154,252,0.2);">
-          <button id="btn-exportar-pdf" class="boton-principal" style="flex: 1; min-width: 200px; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.95rem;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            Descargar Reporte PDF Ejecutivo
-          </button>
-          <a id="btn-whatsapp-cotizacion" href="#" target="_blank" rel="noopener noreferrer" class="boton-secundario" style="flex: 1; min-width: 200px; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.95rem; text-decoration: none;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Enviar Cotización por WhatsApp
-          </a>
-          <button id="btn-abrir-cotizador" class="boton-secundario" style="flex: 1; min-width: 200px; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.95rem;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-            Solicitar Cotización de Instalación
-          </button>
-        </div>
       </div>
     `;
   }
 }
+

@@ -1,69 +1,79 @@
-# ==============================================================================
-# ☀️ HELIOSCAN - .gitignore (Node.js, Python, Rust/Wasm, Vite, VS Code)
-# ==============================================================================
-
-# Node.js & Frontend
+# ─── Dependencias ──────────────────────────────────────────────────────────
 node_modules/
-frontend/node_modules/
-dist/
-frontend/dist/
-frontend/src/**/*.js
-.npm/
-.pnpm-store/
-package-lock.json.bak
+.pnp
+.pnp.js
 
-# Python & FastAPI
+# ─── Build outputs ─────────────────────────────────────────────────────────
+dist/
+dist-ssr/
+build/
+*.local
+
+# ─── Python ────────────────────────────────────────────────────────────────
 __pycache__/
-**/__pycache__/
 *.py[cod]
 *$py.class
-*.so
+*.pyo
 .Python
-env/
 venv/
-.venv/
-ENV/
-.pytest_cache/
-**/.pytest_cache/
-.coverage
-htmlcov/
-*.egg-info/
-
-# Rust & WebAssembly (Wasm)
-target/
-**/target/
-**/pkg/
-cargo-timing.html
-
-# PyTorch / YOLOv8 Logs & Runs
-runs/
-entrenamiento_helioscan/
-helioscan_models/
-*.onnx
-*.engine
-
-# Environment Variables & Secrets
+env/
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
 
-# IDEs & System Files
+# ─── Logs ──────────────────────────────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ─── Herramientas del editor / IDE ─────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ─── Antigravity / agentes IA ──────────────────────────────────────────────
+.agents/
+*.skill
+*.skill.zip
+impeccable-skill.zip
+humanizer.skill
+skills-lock.json
+
+# ─── Archivos multimedia / personales ──────────────────────────────────────
+*.mp3
+*.mp4
+*.wav
+*.avi
+*.mov
+
+# ─── Archivos temporales del sistema ───────────────────────────────────────
 .DS_Store
 Thumbs.db
 desktop.ini
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-.idea/
-*.swp
-*.swo
+*.tmp
+*.temp
 
-# Temporary Archives & Media
-*.zip
-*.mp3
-*.skill
-*.log
+# ─── Testing ───────────────────────────────────────────────────────────────
+.pytest_cache/
+coverage/
+*.coverage
+htmlcov/
 
+# ─── Bases de datos locales ────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ─── Docker ────────────────────────────────────────────────────────────────
+.dockerignore
+
+# ─── Archivos de despliegue eliminados intencionalmente ────────────────────
+# vercel.json fue eliminado (migración a otro proveedor)
+# frontend/package.json y package-lock.json serán re-generados

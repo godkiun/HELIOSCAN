@@ -13,10 +13,10 @@ export class VisorMapaHelioScan {
   private marcador!: L.Marker;
   private callbackSeleccion?: CallbackUbicacion;
 
-  // Ubicación inicial por defecto: Lázaro Cárdenas, Michoacán, México
+  // Ubicación inicial por defecto: Hermosillo, Sonora (Zona de alta irradiancia en México)
   private ubicacionActual: UbicacionSeleccionada = {
-    lat: 17.95833,
-    lng: -102.19722,
+    lat: 29.07296,
+    lng: -110.9559,
   };
 
   public inicializar(

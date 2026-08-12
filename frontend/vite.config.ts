@@ -5,15 +5,6 @@ export default defineConfig({
   plugins: [wasm()],
   build: {
     target: "esnext",
-    chunkSizeWarningLimit: 600,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor_leaflet: ["leaflet"],
-          vendor_pdf: ["jspdf"],
-        },
-      },
-    },
   },
   server: {
     port: 3000,
