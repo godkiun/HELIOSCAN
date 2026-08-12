@@ -3,15 +3,54 @@ import { obtenerDatosNasa, detectarPanelesSolares, DeteccionPanelesRespuesta } f
 import { VisorMapaHelioScan } from "./features/map/visor_mapa";
 import { ComponenteDetectorPaneles } from "./features/vision/detector_paneles_ui";
 import { TableroResultados } from "./features/dashboard/tablero_resultados";
-import {
-  inicializarMotorSolar,
-  calcularTarifa01,
-  calcularPdbt,
-  calcularExcedentes,
-  sugerirPaneles,
-  calcularRoiAnios,
-  calcularMitigacionCo2Kg,
-} from "./features/solar-calculator/cliente_wasm";
+// ── Motor solar nativo TS (reemplaza módulo Rust/Wasm eliminado) ──────────
+function calcularTarifa01(
+  kwh: number,
+  limBasico: number,
+  limIntermedio: number,
+  tarifaBasico: number,
+  tarifaIntermedio: number,
+  tarifaExcedente: number
+): number {
+  const basico = Math.min(kwh, limBasico) * tarifaBasico;
+  const intermedio = Math.max(0, Math.min(kwh - limBasico, limIntermedio - limBasico)) * tarifaIntermedio;
+  const excedente = Math.max(0, kwh - limIntermedio) * tarifaExcedente;
+  return basico + intermedio + excedente;
+}
+function calcularPdbt(
+  kwh: number,
+  demandaKw: number,
+  cargoFijo: number,
+  cargoDemanda: number,
+  tarifaEnergia: number
+): number {
+  return cargoFijo + demandaKw * cargoDemanda + kwh * tarifaEnergia;
+}
+function calcularExcedentes(
+  consumo: number,
+  generacion: number,
+  tarifaExcedente: number,
+  tarifaCompra: number
+): { consumoNetoKwh: number; excedenteKwh: number; cargoEnergiaMxn: number; creditoExcedenteMxn: number; balanceFinalMxn: number } {
+  const excedenteKwh = Math.max(0, generacion - consumo);
+  const consumoNetoKwh = Math.max(0, consumo - generacion);
+  const cargoEnergiaMxn = consumoNetoKwh * tarifaCompra;
+  const creditoExcedenteMxn = excedenteKwh * tarifaExcedente;
+  const balanceFinalMxn = cargoEnergiaMxn - creditoExcedenteMxn;
+  return { consumoNetoKwh, excedenteKwh, cargoEnergiaMxn, creditoExcedenteMxn, balanceFinalMxn };
+}
+function sugerirPaneles(consumo: number, produccionPorPanel: number): number {
+  return Math.ceil(consumo / produccionPorPanel);
+}
+function calcularRoiAnios(costoSistema: number, ahorroAnual: number): number {
+  return ahorroAnual > 0 ? parseFloat((costoSistema / ahorroAnual).toFixed(1)) : 0;
+}
+function calcularMitigacionCo2Kg(kwhAnual: number, factorEmision: number): number {
+  return parseFloat((kwhAnual * factorEmision).toFixed(1));
+}
+async function inicializarMotorSolar(): Promise<void> {
+  // Motor nativo TS — no requiere inicialización
+}
 import { TipoTarifaCfe, ResultadoAnalisisSolar } from "./features/solar-calculator/tipos";
 
 class AplicacionHelioScan {
@@ -31,13 +70,9 @@ class AplicacionHelioScan {
   public async iniciar(): Promise<void> {
     console.log("☀️ Iniciando HelioScan App - Fase 4...");
 
-    // 1. Inicializar motor Rust compilado a WebAssembly
-    try {
-      await inicializarMotorSolar();
-      console.log("✅ Motor Rust / Wasm inicializado correctamente.");
-    } catch (err) {
-      console.error("Error al cargar módulo Wasm:", err);
-    }
+    // 1. Inicializar motor solar (TypeScript nativo)
+    await inicializarMotorSolar();
+    console.log("✅ Motor solar TS inicializado correctamente.");
 
     // 2. Inicializar Mapa Interactivo con Leaflet + Esri World Imagery
     this.visorMapa.inicializar("mapa-satelital", (ubicacion) => {
