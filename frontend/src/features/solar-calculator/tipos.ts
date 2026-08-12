@@ -17,6 +17,8 @@ export interface ResultadoAnalisisSolar {
   irradianciaGhiKwhM2Dia: number;
   panelesSugeridos: number;
   panelesDetectadosSat: number;
+  panelesAdicionalesFaltantes?: number;
+  costoNetoSistemaMxn?: number;
   generacionMensualKwh: number;
   generacionAnualKwh: number;
   costoMensualAntesMxn: number;
@@ -26,6 +28,19 @@ export interface ResultadoAnalisisSolar {
   porcentajeAhorro: number;
   roiAnios: number;
   mitigacionCo2KgAnual: number;
+  performanceRatio?: number;
+  alertaDac?: {
+    esRiesgoDac: boolean;
+    nivelConsumoKwh: number;
+    limiteDacKwh: number;
+    mensajeAlerta: string;
+  };
+  proyeccion25Anios?: {
+    ahorroAcumulado25AniosMxn: number;
+    valorPresenteNetoMxn: number;
+    tasaInternaRetornoPct: number;
+    flujoAnual: Array<{ anio: number; generacionKwh: number; ahorroMxn: number }>;
+  };
   balanceExcedentes: {
     consumoNetoKwh: number;
     excedenteKwh: number;
@@ -34,4 +49,5 @@ export interface ResultadoAnalisisSolar {
     balanceFinalMxn: number;
   };
 }
+
 

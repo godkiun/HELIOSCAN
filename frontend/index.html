@@ -5,77 +5,133 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HelioScan — Estimador Solar Fotovoltaico CFE</title>
     <meta name="description" content="Calcula la viabilidad de paneles solares en tu propiedad con datos de la NASA y tarifas de CFE." />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☀️</text></svg>" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23FC8B26%22 stroke-width=%222%22><circle cx=%2212%22 cy=%2212%22 r=%225%22/><path d=%22M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42%22/></svg>" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/src/index.css" />
   </head>
   <body>
-    <!-- Encabezado Principal -->
+    <!-- Encabezado Principal Centrado -->
     <header class="app-header">
       <div class="logo-contenedor">
-        <span class="logo-icono">☀️</span>
+        <span class="logo-icono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </span>
         <span class="logo-texto">HELIOSCAN</span>
       </div>
-      <div class="badge-estado-servicios">
-        <span class="punto-indicador"></span>
-        <span>Sistema de cálculo activo</span>
-      </div>
+      <p class="logo-descripcion">
+        Plataforma Inteligente de Estimación Solar Fotovoltaica, Análisis Tarifario CFE y Geometría HUD
+      </p>
     </header>
 
-    <!-- Contenedor Principal de App -->
+    <!-- Contenedor Principal de App en Layout Balanceado -->
     <main class="app-contenedor">
-      <!-- Columna Izquierda: Mapa Interactivo y Detector Satelital -->
-      <section class="columna-principal">
-        <div class="tarjeta-panel">
-          <h2 class="titulo-panel">
-            <span>🗺️ Ubicación y mapa de techos</span>
-          </h2>
-          <p class="subtitulo-panel">
-            Haz clic directamente en el mapa sobre tu propiedad o selecciona tu ciudad.
-          </p>
-
-          <!-- Dropdown Ciudades Predeterminadas -->
-          <div class="grupo-formulario" style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
-            <select id="select-ciudad" class="entrada-select">
-              <option value="29.07296,-110.9559">📍 Hermosillo, Sonora (Zona Solar Alta)</option>
-              <option value="17.9583,-102.1964">📍 Lázaro Cárdenas, Michoacán</option>
-              <option value="19.4326,-99.1332">📍 Ciudad de México (CDMX)</option>
-              <option value="25.6866,-100.3161">📍 Monterrey, Nuevo León</option>
-              <option value="20.6597,-103.3496">📍 Guadalajara, Jalisco</option>
-              <option value="32.5149,-117.0382">📍 Tijuana, Baja California</option>
-              <option value="21.1619,-86.8515">📍 Cancún, Quintana Roo</option>
-            </select>
-            <button id="btn-consultar-nasa" class="boton-secundario" style="width: auto; white-space: nowrap;">
-              🌐 Datos NASA
-            </button>
-          </div>
-
-          <!-- Contenedor Mapa Leaflet -->
-          <div class="contenedor-mapa">
-            <div id="mapa-satelital"></div>
-          </div>
-
-          <!-- Coordenadas e Irradiancia Solar -->
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.85rem; font-size: 0.88rem; color: var(--texto-secundario);">
-            <span>Latitud: <strong id="val-lat">29.07296</strong> | Longitud: <strong id="val-lng">-110.9559</strong></span>
-            <span style="color: var(--color-crema);">☀️ Radiación solar: <strong id="val-irradiancia">Cargando...</strong></span>
-          </div>
-
-          <!-- Sección de Detección de Paneles en Techo -->
-          <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--borde-sutil);">
-            <h3 class="titulo-panel" style="font-size: 1.1rem;">
-              <span>🔍 Detección de paneles solares</span>
-            </h3>
+      <!-- Fila Superior: 2 Columnas Equilibradas (Visor Techos & Formulario CFE) -->
+      <div class="grid-superior-equilibrado">
+        <!-- Columna Izquierda: Mapa Interactivo y Plano HUD -->
+        <section class="columna-visual">
+          <!-- Tarjeta 1: Mapa de Ubicación -->
+          <div class="tarjeta-panel" style="margin-bottom: 1.25rem;">
+            <h2 class="titulo-panel">
+              <span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="vertical-align: -3px; margin-right: 4px;"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+                Ubicación y mapa de techos
+              </span>
+            </h2>
             <p class="subtitulo-panel">
-              Escanea la imagen satelital para verificar si el techo ya cuenta con paneles instalados.
+              Busca tu dirección o selecciona tu ciudad para cargar la radiación solar.
             </p>
 
-            <div style="display: flex; gap: 0.75rem;">
-              <button id="btn-detectar-ia" class="boton-principal" style="font-size: 0.95rem; padding: 0.7rem 1rem;">
-                🔍 Escanear paneles en la foto
+            <!-- Barra de Búsqueda por Dirección -->
+            <div class="grupo-formulario" style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+              <input id="input-busqueda-direccion" type="text" class="entrada-texto" placeholder="Escribe tu dirección (ej: Av. Reforma 100, CDMX o Código Postal)" style="flex: 1;" />
+              <button id="btn-buscar-direccion" class="boton-principal" style="width: auto; white-space: nowrap; padding: 0.65rem 1rem;">
+                Buscar
               </button>
-              <label class="boton-secundario" style="display: inline-flex; align-items: center; justify-content: center; cursor: pointer; text-align: center;">
-                📁 Subir foto propia
+            </div>
+
+            <!-- Dropdown Ciudades Predeterminadas -->
+            <div class="grupo-formulario" style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+              <select id="select-ciudad" class="entrada-select" style="flex: 1;">
+                <option value="17.9583,-102.1964" selected>Lázaro Cárdenas, Michoacán (Predeterminada)</option>
+                <option value="29.07296,-110.9559">Hermosillo, Sonora</option>
+                <option value="19.4326,-99.1332">Ciudad de México (CDMX)</option>
+                <option value="25.6866,-100.3161">Monterrey, Nuevo León</option>
+                <option value="20.6597,-103.3496">Guadalajara, Jalisco</option>
+                <option value="32.5149,-117.0382">Tijuana, Baja California</option>
+                <option value="21.1619,-86.8515">Cancún, Quintana Roo</option>
+              </select>
+              <button id="btn-consultar-nasa" class="boton-secundario" style="width: auto; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                Datos NASA
+              </button>
+            </div>
+
+            <!-- Contenedor Mapa Leaflet -->
+            <div class="contenedor-mapa">
+              <div id="mapa-satelital"></div>
+            </div>
+
+            <!-- Coordenadas e Irradiancia Solar -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.85rem; font-size: 0.88rem; color: var(--texto-secundario);">
+              <span>Latitud: <strong id="val-lat">17.9583</strong> | Longitud: <strong id="val-lng">-102.1964</strong></span>
+              <span style="color: var(--color-crema); display: inline-flex; align-items: center; gap: 0.3rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                Radiación solar: <strong id="val-irradiancia">Cargando...</strong>
+              </span>
+            </div>
+          </div>
+
+          <!-- Tarjeta 2: Plano Esquemático HUD Vectorial & Editor -->
+          <div class="tarjeta-panel">
+            <h3 class="titulo-panel" style="font-size: 1.15rem;">
+              <span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="vertical-align: -3px; margin-right: 4px;"><path d="M2 12h20M12 2v20M20 6L4 18"/></svg>
+                Plano esquemático de detección fotovoltaica
+              </span>
+            </h3>
+            <p class="subtitulo-panel">
+              Genera la geometría vectorial de disposición solar detectada por visión por computadora.
+            </p>
+
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button id="btn-detectar-ia" class="boton-principal" style="font-size: 0.9rem; padding: 0.65rem 0.9rem; flex: 1 1 200px; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Generar plano de paneles
+              </button>
+              <button id="btn-cargar-demo-paneles" class="boton-secundario" style="font-size: 0.88rem; padding: 0.65rem 0.9rem; flex: 1 1 180px; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                Cargar Techo con Paneles
+              </button>
+              <label class="boton-secundario" style="display: inline-flex; align-items: center; justify-content: center; cursor: pointer; text-align: center; font-size: 0.88rem; padding: 0.65rem 0.9rem; flex: 1 1 150px; gap: 0.4rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5l2-3h6l2 3h5a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Subir foto propia
                 <input id="input-imagen-archivo" type="file" accept="image/*" style="display: none;" />
               </label>
+            </div>
+
+            <!-- Controles de Edición Interactiva Manual HUD -->
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.6rem;">
+              <button id="btn-modo-agregar" class="boton-secundario" style="font-size: 0.82rem; padding: 0.5rem 0.75rem; flex: 1 1 120px; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Agregar Panel
+              </button>
+              <button id="btn-modo-eliminar" class="boton-secundario" style="font-size: 0.82rem; padding: 0.5rem 0.75rem; flex: 1 1 120px; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Modo Eliminar
+              </button>
+              <button id="btn-vaciar-paneles" class="boton-secundario" style="font-size: 0.82rem; padding: 0.5rem 0.75rem; flex: 1 1 120px; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                Borrar Todos
+              </button>
+            </div>
+
+            <!-- Banner de Instrucciones Interactivas -->
+            <div id="indicador-modo-edicion" style="margin-top: 0.6rem; padding: 0.45rem 0.85rem; background: rgba(82, 154, 252, 0.12); border: 1px solid rgba(82, 154, 252, 0.35); border-radius: 8px; font-size: 0.83rem; color: #41D0FB; display: flex; align-items: center; justify-content: space-between;">
+              <span id="texto-indicador-modo" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 18h6M10 22h4M15.09 14A6 6 0 0 0 18 9 6 6 0 0 0 6 9a6 6 0 0 0 2.91 5z"/></svg>
+                <span><strong>Guía:</strong> Haz clic en <strong>"Agregar Panel"</strong> y luego haz clic o arrastra sobre el lienzo para dibujar rectángulos.</span>
+              </span>
             </div>
 
             <!-- Canvas de Detecciones Overlay -->
@@ -85,57 +141,128 @@
 
             <div id="resumen-deteccion-ia" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--texto-secundario);"></div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- Columna Derecha: Formulario & Dashboard CFE -->
-      <section class="columna-secundaria">
-        <!-- Tarjeta Parámetros del Recibo CFE -->
-        <div class="tarjeta-panel" style="margin-bottom: 1.5rem;">
-          <h2 class="titulo-panel">
-            <span>📋 Datos de tu recibo CFE</span>
-          </h2>
-          <p class="subtitulo-panel">
-            Ingresa tu consumo promedio para proyectar tu ahorro real mes a mes.
-          </p>
+        <!-- Columna Derecha: Formulario & Parámetros CFE -->
+        <section class="columna-formulario">
+          <div class="tarjeta-panel" style="position: sticky; top: 5rem;">
+            <h2 class="titulo-panel">
+              <span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="vertical-align: -3px; margin-right: 4px;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                Datos de tu recibo CFE
+              </span>
+            </h2>
+            <p class="subtitulo-panel">
+              Ingresa tu consumo promedio para proyectar tu ahorro real mes a mes.
+            </p>
 
-          <form id="form-calculadora-solar" onsubmit="event.preventDefault();">
-            <div class="grupo-formulario">
-              <label class="etiqueta-formulario" for="input-consumo">Consumo mensual aproximado (kWh)</label>
-              <input id="input-consumo" type="number" class="entrada-texto" value="480" step="1" min="10" max="10000" />
-            </div>
+            <form id="form-calculadora-solar" onsubmit="event.preventDefault();">
+              <div class="grupo-formulario">
+                <label class="etiqueta-formulario" for="input-consumo">Consumo mensual aproximado (kWh)</label>
+                <input id="input-consumo" type="number" class="entrada-texto" value="480" step="1" min="10" max="10000" />
+              </div>
 
-            <div class="grupo-formulario">
-              <label class="etiqueta-formulario" for="select-tarifa">Tipo de tarifa CFE</label>
-              <select id="select-tarifa" class="entrada-select">
-                <option value="tarifa_01">Tarifa 01 (Casa o departamento)</option>
-                <option value="pdbt">Tarifa PDBT (Negocio o pequeño comercio)</option>
-              </select>
-            </div>
+              <div class="grupo-formulario">
+                <label class="etiqueta-formulario" for="select-tarifa">Tipo de tarifa CFE</label>
+                <select id="select-tarifa" class="entrada-select">
+                  <option value="tarifa_01">Tarifa 01 (Casa o departamento)</option>
+                  <option value="pdbt">Tarifa PDBT (Negocio o pequeño comercio)</option>
+                </select>
+              </div>
 
-            <div class="grupo-formulario">
-              <label class="etiqueta-formulario" for="input-costo-sistema">Presupuesto estimado del equipo (MXN)</label>
-              <input id="input-costo-sistema" type="number" class="entrada-texto" value="145000" step="1000" />
-            </div>
+              <div class="grupo-formulario">
+                <label class="etiqueta-formulario" for="select-zona-termica">
+                  Zona tarifaria por temperatura
+                  <span id="badge-zona-auto" style="margin-left:6px;font-size:0.75rem;background:rgba(65,208,251,0.15);color:#41D0FB;padding:1px 7px;border-radius:10px;font-weight:600;">Auto</span>
+                </label>
+                <select id="select-zona-termica" class="entrada-select">
+                  <option value="auto">Detectar automáticamente por coordenadas</option>
+                  <option value="1">Tarifa 1 — Zona Estándar (CDMX, Jalisco, Puebla)</option>
+                  <option value="1A">Tarifa 1A — Cálida 25°C+ (Veracruz, Tabasco)</option>
+                  <option value="1B">Tarifa 1B — Cálida 28°C+ (Guerrero, Michoacán Costa)</option>
+                  <option value="1C">Tarifa 1C — Cálida 30°C+ (Sinaloa, Colima)</option>
+                  <option value="1D">Tarifa 1D — Cálida 31°C+ (Tamaulipas, NL)</option>
+                  <option value="1E">Tarifa 1E — Muy Cálida 32°C+ (Sonora, BCS)</option>
+                  <option value="1F">Tarifa 1F — Extrema 33°C+ (Mexicali, Hermosillo)</option>
+                </select>
+              </div>
 
-            <button id="btn-calcular-completo" type="submit" class="boton-principal">
-              <span>⚡ Calcular mi ahorro</span>
-            </button>
-          </form>
-        </div>
+              <div class="grupo-formulario">
+                <label class="etiqueta-formulario" for="select-orientacion">Orientación del techo</label>
+                <select id="select-orientacion" class="entrada-select">
+                  <option value="1.0" selected>Sur (100% Óptima producción solar)</option>
+                  <option value="0.88">Este / Oeste (88% Producción eficiente)</option>
+                  <option value="0.72">Norte (72% Producción con ligera sombra)</option>
+                </select>
+              </div>
 
-        <!-- Tarjeta Resultante / Dashboard -->
+              <div class="grupo-formulario">
+                <label class="etiqueta-formulario" for="input-costo-sistema">Presupuesto estimado del equipo (MXN)</label>
+                <input id="input-costo-sistema" type="number" class="entrada-texto" value="145000" step="1000" />
+              </div>
+
+              <button id="btn-calcular-completo" type="submit" class="boton-principal" style="display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; font-size: 1.1rem; padding: 1.05rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span>Calcular mi ahorro</span>
+              </button>
+            </form>
+          </div>
+        </section>
+      </div>
+
+      <!-- Sección Inferior: Dashboard Resultante a Pantalla Completa -->
+      <section class="seccion-dashboard-fullwidth" style="margin-top: 1.75rem;">
         <div class="tarjeta-panel">
           <div id="contenedor-dashboard">
-            <div style="text-align: center; padding: 2rem 1rem; color: var(--texto-secundario);">
-              <p>Presiona <strong>"Calcular mi ahorro"</strong> para ver la comparativa antes y después.</p>
+            <div style="text-align: center; padding: 3rem 1.5rem; color: var(--texto-secundario);">
+              <p style="font-size: 1.1rem;">Presiona <strong>"Calcular mi ahorro"</strong> para ver la comparativa a pantalla completa.</p>
             </div>
           </div>
         </div>
       </section>
+
+      <!-- Sección Simulador de Baterías LiFePO4 (se muestra tras calcular) -->
+      <section class="seccion-dashboard-fullwidth" id="seccion-baterias" style="margin-top: 1.25rem; display: none;">
+        <div class="tarjeta-panel">
+          <div id="contenedor-simulador-baterias"></div>
+        </div>
+      </section>
     </main>
+
+    <!-- Modal de Cotización con Instaladores -->
+    <div id="modal-cotizador" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 1rem;">
+      <div style="background: var(--bg-tarjeta, #111827); border: 1px solid var(--borde-tarjeta, #529AFC); border-radius: 12px; max-width: 500px; width: 100%; padding: 1.5rem; color: var(--texto-principal, #F3F4F6);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="margin: 0; font-size: 1.2rem; color: var(--color-cyan-fotovoltaico, #41D0FB); display: inline-flex; align-items: center; gap: 0.4rem;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            Solicitar Cotizaciones de Instalación
+          </h3>
+          <button id="btn-cerrar-modal" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--texto-atenuado, #9CA3AF); margin-bottom: 1rem;">
+          Envía tu prospección fotovoltaica a instaladores certificados CFE en tu zona.
+        </p>
+        <form id="form-lead-cotizacion" onsubmit="event.preventDefault();">
+          <div class="grupo-formulario" style="margin-bottom: 0.85rem;">
+            <label class="etiqueta-formulario">Nombre Completo</label>
+            <input id="input-lead-nombre" type="text" class="entrada-texto" placeholder="Ej. Carlos Mendoza" required />
+          </div>
+          <div class="grupo-formulario" style="margin-bottom: 0.85rem;">
+            <label class="etiqueta-formulario">Teléfono WhatsApp</label>
+            <input id="input-lead-telefono" type="tel" class="entrada-texto" placeholder="Ej. 8112345678" required />
+          </div>
+          <div class="grupo-formulario" style="margin-bottom: 1rem;">
+            <label class="etiqueta-formulario">Correo Electrónico</label>
+            <input id="input-lead-email" type="email" class="entrada-texto" placeholder="ejemplo@correo.com" required />
+          </div>
+          <button id="btn-enviar-lead" type="submit" class="boton-principal" style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Solicitar 3 Cotizaciones Gratis
+          </button>
+        </form>
+      </div>
+    </div>
 
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
-

@@ -159,8 +159,13 @@ async def detect_panels(archivo: UploadFile = File(...)):
             )
 
         # Inferencia con YOLOv8 si existe modelo entrenado localmente
-        model_path = os.path.join(os.path.dirname(__file__), "..", "..", "modelos", "panel_detector_yolov8n.pt")
-        if os.path.exists(model_path):
+        model_paths = [
+            os.path.join(os.path.dirname(__file__), "modelos", "panel_detector_yolov8n.pt"),
+            os.path.join(os.path.dirname(__file__), "..", "modelos", "panel_detector_yolov8n.pt"),
+            os.path.join(os.path.dirname(__file__), "..", "..", "modelos", "panel_detector_yolov8n.pt"),
+        ]
+        model_path = next((p for p in model_paths if os.path.exists(p)), None)
+        if model_path:
             from ultralytics import YOLO
             model = YOLO(model_path)
             results = model.predict(img, imgsz=640, conf=0.25)
